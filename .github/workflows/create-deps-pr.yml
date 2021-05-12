@@ -1,0 +1,10 @@
+name: Create NPM Deps PR
+
+on: workflow_dispatch
+
+jobs:
+  say_hello:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Hello!"
