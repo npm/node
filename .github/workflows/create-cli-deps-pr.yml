@@ -14,6 +14,5 @@ jobs:
         run: |
           gh repo clone npm/node
           gh repo clone npm/cli
-          ls -al
-          # cd cli && git checkout gimli01/deps-pr
+          cd cli && git pull origin && git checkout gimli01/deps-pr
           # ./node/tools/update-npm.sh `npm view npm@latest version`
