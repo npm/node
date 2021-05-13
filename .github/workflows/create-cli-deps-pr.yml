@@ -15,4 +15,7 @@ jobs:
           gh repo clone npm/node
           gh repo clone npm/cli
           cd node && git checkout gimli01/deps-pr
-          # ./node/tools/update-npm.sh `npm view npm@latest version`
+          ./tools/update-npm.sh `npm view npm@latest version`
+          git add -A deps/npm
+          git commit -m "deps: upgrade npm to $NPM_VERSION"
+          git rebase --whitespace=fix master
