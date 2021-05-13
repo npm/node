@@ -3,29 +3,15 @@ set -e
 # Shell script to update npm in the source tree to a specific version
 
 BASE_DIR="$( pwd )"/
-DEPS_DIR="$BASE_DIR"deps/
+NODE_DIR="$BASE_DIR"node/
+CLI_DIR="$BASE_DIR"cli/
+DEPS_DIR="$BASE_DIR"node/deps/
 NPM_VERSION=$1
 
 if [ "$#" -le 0 ]; then
   echo "Error: please provide an npm version to update to"
   exit 1
 fi
-
-WORKSPACE="$TMPDIR"update-npm-$NPM_VERSION/
-
-if [ -d "$WORKSPACE" ]; then
-  echo "Cleaning up old workspace"
-  rm -rf "$WORKSPACE"
-fi
-
-echo "Making temporary workspace"
-
-mkdir -p "$WORKSPACE"
-
-cd "$WORKSPACE"
-
-gh repo clone npm/cli
-cd cli
 
 echo "Preparing npm release"
 
@@ -40,11 +26,7 @@ rm -rf npm/
 
 echo "Copying new npm"
 
-tar zxf "$WORKSPACE"cli/release/npm-"$NPM_VERSION".tgz
-
-echo "Deleting temporary workspace"
-
-rm -rf "$WORKSPACE"
+tar zxf "$CLI_DIR"release/npm-"$NPM_VERSION".tgz
 
 echo ""
 echo "All done!"
