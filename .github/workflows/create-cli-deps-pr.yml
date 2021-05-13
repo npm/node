@@ -3,7 +3,10 @@ name: Create CLI Deps PR
 # Controls when the action will run.
 on:
   # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+  # workflow_dispatch:
+  push:
+    branches:
+      - gimli01/deps-pr
 
 # permissions: read-all|write-all
 
@@ -67,8 +70,10 @@ jobs:
       #     path: tmp/cli
       
       - name: Update CLI dependency
+        with:
+          token: ${{ github.token }}
         run: |
-          gh repo clone npm/cli
+          gh auth login --with-token '${token}'
         # run: |
         #   cd tmp/cli
         #   git pull origin
