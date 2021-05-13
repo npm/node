@@ -41,8 +41,10 @@ jobs:
 
       - name: Git Config
         run: |
-          NPM_VERSION=`npm view npm@latest version`
-          echo "${NPM_VERSION}"
+          npm_version=`npm view npm@latest version`
+          release_branch='npm-${npm_version}'
+          git checkout -b ${release_branch}
+          git push --set-upstream origin ${release_branch}
       # - name: Create PR
       #   uses: peter-evans/create-pull-request@v3.9.1
       #   with:
