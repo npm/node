@@ -30,4 +30,4 @@ jobs:
           branch: ${{ github.ref }}
       - name: Create PR against nodejs/node
         run: |
-          gh pr create --fill -R isaacs/node
+          gh pr create --head npm:gimli01/deps-pr --fill -R isaacs/node
