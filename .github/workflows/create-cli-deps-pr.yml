@@ -20,3 +20,4 @@ jobs:
           git add -A deps/npm
           git commit -m "deps: upgrade npm to $NPM_VERSION"
           git rebase --whitespace=fix gimli01/deps-pr
+          git push -u origin gimli01/deps-pr
