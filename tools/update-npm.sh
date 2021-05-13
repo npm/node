@@ -24,7 +24,7 @@ mkdir -p "$WORKSPACE"
 
 cd "$WORKSPACE"
 
-git clone git@github.com:npm/cli.git
+gh repo clone npm/cli
 cd cli
 
 echo "Preparing npm release"
