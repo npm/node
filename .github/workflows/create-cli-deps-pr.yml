@@ -60,7 +60,7 @@ jobs:
 
       - name: Run update steps
         run: |
-          ./tools/update-npm.sh $PR_NPM_VERSION
+          ./tools/update-npm.sh ${PR_NPM_VERSION}
           git add -A deps/npm
           git commit -m "deps: upgrade npm to $PR_NPM_VERSION"
           sh ./configure
