@@ -61,26 +61,26 @@ jobs:
       # git checkout -b $release_branch
       # git push --set-upstream origin $release_branch
 
-      # - name: Clone CLI into tmp
-      #   uses: actions/checkout@v2
-      #   with:
-      #     fetch: 0
-      #     repository: npm/cli
-      #     token: ${{ secrets.token }}
-      #     path: tmp/cli
-      
+      - name: Clone CLI into tmp
+        uses: actions/checkout@v2
+        with:
+          fetch: 0
+          repository: npm/cli
+          token: ${{ github.token }}
+          path: tmp/cli
+
       - name: Update CLI dependency
-        run: |
-          gh auth login --with-token < '${{ github.token }}'
         # run: |
-        #   cd tmp/cli
-        #   git pull origin
-        #   git checkout v7.12.1
-        #   make 
-        #   make release
-        #   cd ../../deps
-        #   tar zxf ../tmp/cli/release/npm-7.11.1.tgz
-        #   rm -rf ../tmp
+        # gh auth login --with-token < '${{ github.token }}'
+        run: |
+          cd tmp/cli
+          git pull origin
+          git checkout v7.12.1
+          make
+          make release
+          cd ../../deps
+          tar zxf ../tmp/cli/release/npm-7.11.1.tgz
+          rm -rf ../tmp
 
       # - name: Run update steps
       #   run: |
