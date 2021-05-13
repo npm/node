@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
 set -e
-# Shell script to update npm in the source tree to a specific version
-
-BASE_DIR="$( pwd )"/
-CLI_DIR="$BASE_DIR"cli/
-DEPS_DIR="$BASE_DIR"deps/
-NPM_VERSION=$1
+# Shell script to update npm in the source tree to a specific version BASE_DIR="$( pwd )"/ CLI_DIR="$BASE_DIR"cli/ DEPS_DIR="$BASE_DIR"deps/ NPM_VERSION=$1
 
 if [ "$#" -le 0 ]; then
   echo "Error: please provide an npm version to update to"
@@ -30,12 +25,16 @@ echo "Copying new npm"
 cd "$BASE_DIR"
 tar zxf cli/release/npm-"$NPM_VERSION".tgz
 
-echo ""
-echo "All done!"
-echo ""
-echo "Please git add npm, commit the new version, and whitespace-fix:"
-echo ""
-echo "$ git add -A deps/npm"
-echo "$ git commit -m \"deps: upgrade npm to $NPM_VERSION\""
-echo "$ git rebase --whitespace=fix master"
-echo ""
+git add -A deps/npm
+git commit -m "deps: upgrade npm to $NPM_VERSION"
+git rebase --whitespace=fix HEAD^
+
+# echo ""
+# echo "All done!"
+# echo ""
+# echo "Please git add npm, commit the new version, and whitespace-fix:"
+# echo ""
+# echo "$ git add -A deps/npm"
+# echo "$ git commit -m \"deps: upgrade npm to $NPM_VERSION\""
+# echo "$ git rebase --whitespace=fix master"
+# echo ""

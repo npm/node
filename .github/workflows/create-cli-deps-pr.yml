@@ -18,14 +18,14 @@ jobs:
           repository: ${{ github.repository }}
       - name: Update npm/node
         run: |
-          ./tools/update-npm.sh `npm view npm@latest version`
           git config user.name "npm-robot"
           git config user.email "ops+robot@npmjs.com"
-          git add -A deps/npm
-          git commit -m "deps: upgrade npm to $NPM_VERSION"
-          git rebase --whitespace=fix gimli01/deps-pr
+          ./tools/update-npm.sh `npm view npm@latest version`
       - name: Push commits
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
+      - name: Create PR against nodejs/node
+        run: |
+          gh pr create --fill -R isaacs/node
