@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -e
-# Shell script to update npm in the source tree to a specific version BASE_DIR="$( pwd )"/ CLI_DIR="$BASE_DIR"cli/ DEPS_DIR="$BASE_DIR"deps/ NPM_VERSION=$1
+# Shell script to update npm in the source tree to a specific version 
+
+BASE_DIR="$( pwd )"/ 
+DEPS_DIR="$BASE_DIR"deps/ 
+NPM_VERSION=$1
 
 if [ "$#" -le 0 ]; then
   echo "Error: please provide an npm version to update to"
