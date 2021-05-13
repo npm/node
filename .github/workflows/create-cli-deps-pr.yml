@@ -30,4 +30,4 @@ jobs:
           branch: gimli01/deps-pr
       - name: Create PR against nodejs/node
         run: |
-          gh pr create --fill -R isaacs/node
+          gh pr create -R isaacs/node -H npm:gimli01/deps-pr
