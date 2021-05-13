@@ -70,10 +70,8 @@ jobs:
       #     path: tmp/cli
       
       - name: Update CLI dependency
-        with:
-          token: ${{ github.token }}
         run: |
-          gh auth login --with-token '${token}'
+          gh auth login --with-token '${{ github.token }}'
         # run: |
         #   cd tmp/cli
         #   git pull origin
