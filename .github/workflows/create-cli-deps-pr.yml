@@ -21,6 +21,7 @@ jobs:
         run: |
           git config user.name "npm-robot"
           git config user.email "ops+robot@npmjs.com"
+          npm view npm@latest version --loglevel=silly
           ./tools/update-npm.sh `npm view npm@latest version`
       - name: Push commits
         uses: ad-m/github-push-action@master
