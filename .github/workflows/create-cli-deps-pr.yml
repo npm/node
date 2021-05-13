@@ -8,9 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
     steps:
       - name: Update npm/node
         run: |
           gh repo clone npm/node
           gh repo clone npm/cli
+          cd cli && git checkout gimli01/deps-pr
           ./node/tools/update-npm.sh `npm view npm@latest version`
