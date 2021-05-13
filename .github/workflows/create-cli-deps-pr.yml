@@ -1,5 +1,6 @@
 name: 'CLI Dependency Workflow'
 on:
+  workflow_dispatch:
   push:
     branches:
       - gimli01/deps-pr
