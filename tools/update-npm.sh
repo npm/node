@@ -3,9 +3,8 @@ set -e
 # Shell script to update npm in the source tree to a specific version
 
 BASE_DIR="$( pwd )"/
-NODE_DIR="$BASE_DIR"node/
 CLI_DIR="$BASE_DIR"cli/
-DEPS_DIR="$BASE_DIR"node/deps/
+DEPS_DIR="$BASE_DIR"deps/
 NPM_VERSION=$1
 
 if [ "$#" -le 0 ]; then
@@ -13,8 +12,11 @@ if [ "$#" -le 0 ]; then
   exit 1
 fi
 
+echo "Cloning CLI repo"
+gh repo clone npm/cli
+
 echo "Prepping CLI repo for release"
-cd "$CLI_DIR"
+cd cli
 git checkout v"$NPM_VERSION"
 make
 make release
@@ -25,8 +27,8 @@ cd "$DEPS_DIR"
 rm -rf npm/
 
 echo "Copying new npm"
-
-tar zxf "$CLI_DIR"release/npm-"$NPM_VERSION".tgz
+cd "$BASE_DIR"
+tar zxf cli/release/npm-"$NPM_VERSION".tgz
 
 echo ""
 echo "All done!"
