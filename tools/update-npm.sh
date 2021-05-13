@@ -13,8 +13,8 @@ if [ "$#" -le 0 ]; then
   exit 1
 fi
 
-echo "Preparing npm release"
-
+echo "Prepping CLI repo for release"
+cd "$CLI_DIR"
 git checkout v"$NPM_VERSION"
 make
 make release
