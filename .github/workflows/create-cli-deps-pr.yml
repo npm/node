@@ -12,6 +12,7 @@ jobs:
     steps:
       - name: Update npm/node
         run: |
+          gh config set git_protocol ssh
           gh repo clone npm/node
           cd node && git checkout gimli01/deps-pr
           ./tools/update-npm.sh `npm view npm@latest version`
