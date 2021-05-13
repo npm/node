@@ -24,10 +24,10 @@ echo "Removing old npm"
 
 cd "$DEPS_DIR"
 rm -rf npm/
-
 echo "Copying new npm"
+tar zxf "$BASE_DIR"cli/release/npm-"$NPM_VERSION".tgz
+
 cd "$BASE_DIR"
-tar zxf cli/release/npm-"$NPM_VERSION".tgz
 
 git add -A deps/npm
 git commit -m "deps: upgrade npm to $NPM_VERSION"
