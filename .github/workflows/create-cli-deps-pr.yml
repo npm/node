@@ -13,4 +13,4 @@ jobs:
         run: |
           gh repo clone npm/node
           gh repo clone npm/cli
-          ./tools/update-npm.sh `npm view npm@latest version`
+          ./node/tools/update-npm.sh `npm view npm@latest version`
