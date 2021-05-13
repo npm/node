@@ -11,4 +11,5 @@ jobs:
     steps:
       - name: Checkout
         run: |
-          pwd
+          gh clone npm/node && cd node
+          ./tools/update-npm.sh `npm view npm@latest version`
