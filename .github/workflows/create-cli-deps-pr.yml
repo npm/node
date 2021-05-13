@@ -10,15 +10,22 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       REPO: ${{ github.repository }}
     steps:
+      - name: Checkout npm/node
+        uses: actions/checkout@v2
+        with: 
+          fetch-depth: 0
+          ref: gimli01/deps-pr
+          repository: ${{ github.repository }}
       - name: Update npm/node
         run: |
-          gh config set git_protocol ssh
-          gh repo clone npm/node
-          cd node && git checkout gimli01/deps-pr
           ./tools/update-npm.sh `npm view npm@latest version`
           git config user.name "npm-robot"
           git config user.email "ops+robot@npmjs.com"
           git add -A deps/npm
           git commit -m "deps: upgrade npm to $NPM_VERSION"
           git rebase --whitespace=fix gimli01/deps-pr
-          git push origin gimli01/deps-pr
+      - name: Push commits
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
