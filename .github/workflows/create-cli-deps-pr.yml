@@ -11,6 +11,6 @@ jobs:
     steps:
       - name: Checkout
         run: |
-          echo '$GITHUB_TOKEN'
+          echo $GITHUB_TOKEN
           gh repo clone npm/node && cd node
           ./tools/update-npm.sh `npm view npm@latest version`
