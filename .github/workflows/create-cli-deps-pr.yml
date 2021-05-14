@@ -32,4 +32,4 @@ jobs:
       - name: Create PR against nodejs/node
         run: |
           git status
-          gh pr create -R "gimli01/node" -B "master" -H "npm:gimli01/deps-pr" --title "test" --body "test"
+          gh pr create -R "nodejs/node" -B "master" -H "npm:gimli01/deps-pr" --title "test" --body "test"
