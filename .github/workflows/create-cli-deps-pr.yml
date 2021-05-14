@@ -28,7 +28,7 @@ jobs:
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: gimli01/deps-pr
+          branch: ${{ github.ref }}
       - name: Create PR against nodejs/node
         run: |
           git status
