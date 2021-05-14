@@ -17,6 +17,7 @@ jobs:
           fetch-depth: 0
           ref: gimli01/deps-pr
           repository: ${{ github.repository }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Update npm/node
         run: |
           git config user.name "npm-robot"
@@ -34,6 +35,7 @@ jobs:
           fetch-depth: 0
           ref: master
           repository: isaacs/node
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Create PR against nodejs/node
         run: |
           git status
