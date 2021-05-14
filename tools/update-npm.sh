@@ -20,14 +20,17 @@ git checkout v"$NPM_VERSION"
 make
 make release
 
-echo "Removing old npm"
 
+echo "Removing old npm"
 cd "$DEPS_DIR"
 rm -rf npm/
+
 echo "Copying new npm"
 tar zxf "$BASE_DIR"cli/release/npm-"$NPM_VERSION".tgz
 
+echo "Removing CLI workspace"
 cd "$BASE_DIR"
+rm -rf cli
 
 git add -A deps/npm
 git commit -m "deps: upgrade npm to $NPM_VERSION"
