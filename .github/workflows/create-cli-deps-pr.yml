@@ -28,6 +28,13 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: gimli01/deps-pr
+      - name: Checkout nodejs/node
+        uses: actions/checkout@v2
+        with: 
+          fetch-depth: 0
+          ref: master
+          repository: isaacs/node
       - name: Create PR against nodejs/node
         run: |
+          git status
           gh pr create -R "isaacs/node" -H "npm:gimli01/deps-pr" --title 'npm@7.13.0' --body ''
