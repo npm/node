@@ -23,6 +23,7 @@ jobs:
       - name: Run dependency updates and create PR
         run: |
           npm_version=`npm view npm@latest version`
+          echo $npm_version
           git config user.name "npm-robot"
           git config user.email "ops+robot@npmjs.com"
           ./tools/update-npm.sh "$version"
