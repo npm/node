@@ -1,9 +1,8 @@
 name: 'CLI Dependency Update'
+
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - gimli01/deps-pr
+
 jobs:
   create-pull-request:
     runs-on: ubuntu-latest
@@ -15,16 +14,14 @@ jobs:
         uses: actions/checkout@v2
         with: 
           fetch-depth: 0
-          ref: gimli01/deps-pr
+          ref: master
           repository: ${{ github.repository }}
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Update npm/node
+      - name: Run dependency updates and create PR
         run: |
+          npm_version=`npm view npm@latest version`
           git config user.name "npm-robot"
           git config user.email "ops+robot@npmjs.com"
-          npm view npm@latest version --loglevel=silly
-          ./tools/update-npm.sh `npm view npm@latest version`
-          git push origin gimli01/deps-pr
-      - name: Create PR against nodejs/node
-        run: |
-          gh pr create -R "nodejs/node" -B "master" -H "npm:gimli01/deps-pr" --title "test" --body "test"
+          ./tools/update-npm.sh $version
+          git push origin master
+          gh pr create -R "nodejs/node" -B "master" -H "npm:master" --title "deps(cli): upgrade npm to $version"
