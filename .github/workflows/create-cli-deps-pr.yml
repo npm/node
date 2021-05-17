@@ -25,6 +25,6 @@ jobs:
           npm_version=`npm view npm@latest version`
           git config user.name "npm-robot"
           git config user.email "ops+robot@npmjs.com"
-          ./tools/update-npm.sh $version
+          ./tools/update-npm.sh "$version"
           git push origin master
           gh pr create -R "gimli01/node" -B "master" -H "npm:master" --title "deps(cli): upgrade npm to $version" --body ""
