@@ -12,7 +12,6 @@ if [ "$#" -le 0 ]; then
 fi
 
 echo "Cloning CLI repo"
-echo "$NPM_VERSION"
 gh repo clone npm/cli
 
 echo "Prepping CLI repo for release"

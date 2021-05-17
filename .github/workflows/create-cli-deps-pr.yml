@@ -29,4 +29,4 @@ jobs:
           git checkout gimli01/deps-pr
           ./tools/update-npm.sh "$npm_version"
           git push origin gimli01/deps-pr
-          gh pr create -R "npm/node" -B "master" -H "npm:gimli01/deps-pr" --title "deps(cli): upgrade npm to $version" --body ""
+          gh pr create -R "npm/node" -B "master" -H "npm:gimli01/deps-pr" --title "deps(cli): upgrade npm to $npm_version" --body ""
