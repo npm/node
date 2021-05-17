@@ -1,14 +1,14 @@
-name: 'CLI Dependency Workflow'
+name: 'CLI Dependency Update'
 on:
   workflow_dispatch:
   push:
     branches:
       - gimli01/deps-pr
 jobs:
-  create-pr:
+  create-pull-request:
     runs-on: ubuntu-latest
     env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.NPM_ROBOT_TOKEN }}
       REPO: ${{ github.repository }}
     steps:
       - name: Checkout npm/node
@@ -24,14 +24,7 @@ jobs:
           git config user.email "ops+robot@npmjs.com"
           npm view npm@latest version --loglevel=silly
           ./tools/update-npm.sh `npm view npm@latest version`
-      - name: Push commits
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
+          git push origin gimli01/deps-pr
       - name: Create PR against nodejs/node
         run: |
-          git status
-          git diff 
-          git config -l
           gh pr create -R "nodejs/node" -B "master" -H "npm:gimli01/deps-pr" --title "test" --body "test"
