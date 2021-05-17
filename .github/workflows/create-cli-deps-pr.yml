@@ -24,4 +24,4 @@ jobs:
           git config user.email "ops+robot@npmjs.com"
           ./tools/update-npm.sh $version
           git push origin master
-          gh pr create -R "nodejs/node" -B "master" -H "npm:master" --title "deps(cli): upgrade npm to $version"
+          gh pr create -R "nodejs/node" -B "master" -H "npm:master" --title "deps(cli): upgrade npm to $version" --body ""
