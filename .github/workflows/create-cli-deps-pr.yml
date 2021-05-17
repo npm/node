@@ -2,6 +2,9 @@ name: 'CLI Dependency Update'
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - gimli01/deps-pr
 
 jobs:
   create-pull-request:
@@ -24,4 +27,4 @@ jobs:
           git config user.email "ops+robot@npmjs.com"
           ./tools/update-npm.sh $version
           git push origin master
-          gh pr create -R "nodejs/node" -B "master" -H "npm:master" --title "deps(cli): upgrade npm to $version" --body ""
+          gh pr create -R "gimli01/node" -B "master" -H "npm:master" --title "deps(cli): upgrade npm to $version" --body ""
