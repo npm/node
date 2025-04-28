@@ -19,6 +19,7 @@ const didYouMean = (pkg, scmd) => {
       .map(str => [`run ${str}`, `run the "${str}" package script`]),
     ...Object.keys(bin)
       .filter(cmd => isClose(scmd, cmd))
+      /* eslint-disable-next-line max-len */
       .map(str => [`exec ${str}`, `run the "${str}" command from either this or a remote npm package`]),
   ]
 

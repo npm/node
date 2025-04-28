@@ -1,4 +1,4 @@
-const npmFetch = require('npm-registry-fetch')
+const fetch = require('npm-registry-fetch')
 const { otplease } = require('../utils/auth.js')
 const npa = require('npm-package-arg')
 const { log } = require('proc-log')
@@ -14,7 +14,6 @@ class Deprecate extends BaseCommand {
   static params = [
     'registry',
     'otp',
-    'dry-run',
   ]
 
   static ignoreImplicitWorkspace = true
@@ -48,7 +47,7 @@ class Deprecate extends BaseCommand {
     }
 
     const uri = '/' + p.escapedName
-    const packument = await npmFetch.json(uri, {
+    const packument = await fetch.json(uri, {
       ...this.npm.flatOptions,
       spec: p,
       query: { write: true },
@@ -57,26 +56,17 @@ class Deprecate extends BaseCommand {
     const versions = Object.keys(packument.versions)
       .filter(v => semver.satisfies(v, spec, { includePrerelease: true }))
 
-    const dryRun = this.npm.config.get('dry-run')
-
     if (versions.length) {
       for (const v of versions) {
         packument.versions[v].deprecated = msg
-        if (msg) {
-          log.notice(`deprecating ${packument.name}@${v} with message "${msg}"`)
-        } else {
-          log.notice(`undeprecating ${packument.name}@${v}`)
-        }
       }
-      if (!dryRun) {
-        return otplease(this.npm, this.npm.flatOptions, opts => npmFetch(uri, {
-          ...opts,
-          spec: p,
-          method: 'PUT',
-          body: packument,
-          ignoreBody: true,
-        }))
-      }
+      return otplease(this.npm, this.npm.flatOptions, opts => fetch(uri, {
+        ...opts,
+        spec: p,
+        method: 'PUT',
+        body: packument,
+        ignoreBody: true,
+      }))
     } else {
       log.warn('deprecate', 'No version found for', p.rawSpec)
     }

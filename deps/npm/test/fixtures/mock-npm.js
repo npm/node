@@ -292,26 +292,12 @@ const setupMockNpm = async (t, {
 
 const loadNpmWithRegistry = async (t, opts) => {
   const mock = await setupMockNpm(t, opts)
-  return {
-    ...mock,
-    ...loadRegistry(t, mock, opts),
-    ...loadFsAssertions(t, mock),
-  }
-}
-
-const loadRegistry = (t, mock, opts) => {
   const registry = new MockRegistry({
     tap: t,
-    registry: opts.registry ?? mock.npm.config.get('registry'),
-    authorization: opts.authorization,
-    basic: opts.basic,
-    debug: opts.debugRegistry ?? false,
-    strict: opts.strictRegistryNock ?? true,
+    registry: mock.npm.config.get('registry'),
+    strict: true,
   })
-  return { registry }
-}
 
-const loadFsAssertions = (t, mock) => {
   const fileShouldExist = (filePath) => {
     t.equal(
       fsSync.existsSync(path.join(mock.npm.prefix, filePath)), true, `${filePath} should exist`
@@ -366,7 +352,7 @@ const loadFsAssertions = (t, mock) => {
     packageDirty,
   }
 
-  return { assert }
+  return { registry, assert, ...mock }
 }
 
 /** breaks down a spec "abbrev@1.1.1" into different parts for mocking */

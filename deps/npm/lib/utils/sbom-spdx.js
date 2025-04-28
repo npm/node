@@ -26,16 +26,6 @@ const spdxOutput = ({ npm, nodes, packageType }) => {
   const uuid = crypto.randomUUID()
   const ns = `http://spdx.org/spdxdocs/${npa(rootID).escapedName}-${rootNode.version}-${uuid}`
 
-  // Create list of child nodes w/ unique IDs
-  const childNodeMap = new Map()
-  for (const item of childNodes) {
-    const id = toSpdxID(item)
-    if (!childNodeMap.has(id)) {
-      childNodeMap.set(id, item)
-    }
-  }
-  const uniqueChildNodes = Array.from(childNodeMap.values())
-
   const relationships = []
   const seen = new Set()
   for (let node of nodes) {
@@ -75,7 +65,7 @@ const spdxOutput = ({ npm, nodes, packageType }) => {
       ],
     },
     documentDescribes: [toSpdxID(rootNode)],
-    packages: [toSpdxItem(rootNode, { packageType }), ...uniqueChildNodes.map(toSpdxItem)],
+    packages: [toSpdxItem(rootNode, { packageType }), ...childNodes.map(toSpdxItem)],
     relationships: [
       {
         spdxElementId: SPDX_IDENTIFER,
@@ -183,7 +173,7 @@ const isGitNode = (node) => {
   try {
     const { type } = npa(node.resolved)
     return type === 'git' || type === 'hosted'
-  } catch {
+  } catch (err) {
     /* istanbul ignore next */
     return false
   }

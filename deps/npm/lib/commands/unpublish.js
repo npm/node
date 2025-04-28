@@ -145,9 +145,6 @@ class Unpublish extends BaseCommand {
       // corresponding `publishConfig` settings
       const filteredPublishConfig = Object.fromEntries(
         Object.entries(manifest.publishConfig).filter(([key]) => !(key in cliFlags)))
-      for (const key in filteredPublishConfig) {
-        this.npm.config.checkUnknown('publishConfig', key)
-      }
       flatten(filteredPublishConfig, opts)
     }
 

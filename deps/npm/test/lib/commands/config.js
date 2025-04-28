@@ -164,9 +164,8 @@ t.test('config list with publishConfig', async t => {
     prefixDir: {
       'package.json': JSON.stringify({
         publishConfig: {
-          other: 'not defined',
           registry: 'https://some.registry',
-          '//some.registry:_authToken': 'mytoken',
+          _authToken: 'mytoken',
         },
       }),
     },
@@ -174,7 +173,7 @@ t.test('config list with publishConfig', async t => {
   })
 
   t.test('local', async t => {
-    const { npm, logs, joinedOutput } = await loadMockNpmWithPublishConfig(t)
+    const { npm, joinedOutput } = await loadMockNpmWithPublishConfig(t)
 
     await npm.exec('config', ['list'])
 
@@ -183,7 +182,6 @@ t.test('config list with publishConfig', async t => {
     t.match(output, 'registry = "https://some.registry"')
 
     t.matchSnapshot(output, 'output matches snapshot')
-    t.matchSnapshot(logs.warn, 'warns about unknown config')
   })
 
   t.test('global', async t => {

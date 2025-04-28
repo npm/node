@@ -103,7 +103,7 @@ The full list is:
  - `username`
  - `_password`
  - `email`
- - `cafile` (path to certificate authority file)
+ - `certfile` (path to certificate file)
  - `keyfile` (path to key file)
 
 In order to scope these values, they must be prefixed by a URI fragment.

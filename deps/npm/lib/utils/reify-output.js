@@ -50,6 +50,7 @@ const reifyOutput = (npm, arb) => {
         switch (d.action) {
           case 'REMOVE':
             if (showDiff) {
+              /* eslint-disable-next-line max-len */
               output.standard(`${chalk.blue('remove')} ${d.actual.name} ${d.actual.package.version}`)
             }
             summary.removed++
@@ -62,6 +63,7 @@ const reifyOutput = (npm, arb) => {
             break
           case 'CHANGE':
             if (showDiff) {
+              /* eslint-disable-next-line max-len */
               output.standard(`${chalk.cyan('change')} ${d.actual.name} ${d.actual.package.version} => ${d.ideal.package.version}`)
             }
             summary.changed++

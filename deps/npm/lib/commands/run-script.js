@@ -26,11 +26,7 @@ class RunScript extends BaseCommand {
   static async completion (opts, npm) {
     const argv = opts.conf.argv.remain
     if (argv.length === 2) {
-      const workspacePrefixes = npm.config.get('workspace', 'default')
-      const localPrefix = workspacePrefixes.length
-        ? workspacePrefixes[0]
-        : npm.localPrefix
-      const { content: { scripts = {} } } = await pkgJson.normalize(localPrefix)
+      const { content: { scripts = {} } } = await pkgJson.normalize(npm.localPrefix)
         .catch(() => ({ content: {} }))
       if (opts.isFish) {
         return Object.keys(scripts).map(s => `${s}\t${scripts[s].slice(0, 30)}`)
@@ -133,14 +129,14 @@ class RunScript extends BaseCommand {
 
     for (const [ev, evArgs] of events) {
       await runScript({
-        args: evArgs,
-        event: ev,
-        nodeGyp: this.npm.config.get('node-gyp'),
         path,
-        pkg,
-        // || undefined is because runScript will be unhappy with the default null value
+        // this || undefined is because runScript will be unhappy with the
+        // default null value
         scriptShell: this.npm.config.get('script-shell') || undefined,
         stdio: 'inherit',
+        pkg,
+        event: ev,
+        args: evArgs,
       })
     }
   }

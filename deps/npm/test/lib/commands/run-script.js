@@ -3,7 +3,6 @@ const { resolve } = require('node:path')
 const realRunScript = require('@npmcli/run-script')
 const mockNpm = require('../../fixtures/mock-npm')
 const { cleanCwd } = require('../../fixtures/clean-snapshot')
-const path = require('node:path')
 
 const mockRs = async (t, { windows = false, runScript, ...opts } = {}) => {
   let RUN_SCRIPTS = []
@@ -348,7 +347,6 @@ t.test('skip pre/post hooks when using ignoreScripts', async t => {
           env: 'env',
         },
       },
-      nodeGyp: npm.config.get('node-gyp'),
       event: 'env',
     },
   ])
@@ -487,32 +485,12 @@ t.test('list scripts, only non-commands', async t => {
   t.matchSnapshot(joinedOutput())
 })
 
-t.test('node-gyp config', async t => {
-  const { runScript, RUN_SCRIPTS, npm } = await mockRs(t, {
-    prefixDir: {
-      'package.json': JSON.stringify({
-        name: 'x',
-        version: '1.2.3',
-      }),
-    },
-    config: { 'node-gyp': '/test/node-gyp.js' },
-  })
-
-  await runScript.exec(['env'])
-  t.match(RUN_SCRIPTS(), [
-    {
-      nodeGyp: npm.config.get('node-gyp'),
-    },
-  ])
-})
-
 t.test('workspaces', async t => {
   const mockWorkspaces = async (t, {
     runScript,
     prefixDir,
     workspaces = true,
     exec = [],
-    chdir = ({ prefix }) => prefix,
     ...config
   } = {}) => {
     const mock = await mockRs(t, {
@@ -576,7 +554,6 @@ t.test('workspaces', async t => {
         ...Array.isArray(workspaces) ? { workspace: workspaces } : { workspaces },
         ...config,
       },
-      chdir,
       runScript,
     })
     if (exec) {
@@ -584,22 +561,6 @@ t.test('workspaces', async t => {
     }
     return mock
   }
-
-  t.test('completion', async t => {
-    t.test('in root dir', async t => {
-      const { runScript } = await mockWorkspaces(t)
-      const res = await runScript.completion({ conf: { argv: { remain: ['npm', 'run'] } } })
-      t.strictSame(res, [])
-    })
-
-    t.test('in workspace dir', async t => {
-      const { runScript } = await mockWorkspaces(t, {
-        chdir: ({ prefix }) => path.join(prefix, 'packages/c'),
-      })
-      const res = await runScript.completion({ conf: { argv: { remain: ['npm', 'run'] } } })
-      t.strictSame(res, ['test', 'posttest', 'lorem'])
-    })
-  })
 
   t.test('list all scripts', async t => {
     const { joinedOutput } = await mockWorkspaces(t)

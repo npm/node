@@ -4,11 +4,23 @@ const { spawn } = require('node:child_process')
 const { EOL } = require('node:os')
 const localeCompare = require('@isaacs/string-locale-compare')('en')
 const pkgJson = require('@npmcli/package-json')
-const { defaults, definitions, nerfDarts } = require('@npmcli/config/lib/definitions')
+const { defaults, definitions } = require('@npmcli/config/lib/definitions')
 const { log, output } = require('proc-log')
 const BaseCommand = require('../base-cmd.js')
 const { redact } = require('@npmcli/redact')
 
+// These are the configs that we can nerf-dart. Not all of them currently even
+// *have* config definitions so we have to explicitly validate them here.
+// This is used to validate during "npm config set"
+const nerfDarts = [
+  '_auth',
+  '_authToken',
+  '_password',
+  'certfile',
+  'email',
+  'keyfile',
+  'username',
+]
 // These are the config values to swap with "protected".  It does not catch
 // every single sensitive thing a user may put in the npmrc file but it gets
 // the common ones.  This is distinct from nerfDarts because that is used to
@@ -113,7 +125,7 @@ class Config extends BaseCommand {
     const action = argv[2]
     switch (action) {
       case 'set':
-        // TODO: complete with valid values, if possible.
+        // todo: complete with valid values, if possible.
         if (argv.length > 3) {
           return []
         }
@@ -366,9 +378,6 @@ ${defData}
       const { content } = await pkgJson.normalize(this.npm.prefix).catch(() => ({ content: {} }))
 
       if (content.publishConfig) {
-        for (const key in content.publishConfig) {
-          this.npm.config.checkUnknown('publishConfig', key)
-        }
         const pkgPath = resolve(this.npm.prefix, 'package.json')
         msg.push(`; "publishConfig" from ${pkgPath}`)
         msg.push('; This set of config values will be used at publish-time.', '')

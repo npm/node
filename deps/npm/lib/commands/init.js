@@ -19,7 +19,6 @@ class Init extends BaseCommand {
     'init-author-url',
     'init-license',
     'init-module',
-    'init-type',
     'init-version',
     'yes',
     'force',
@@ -193,7 +192,7 @@ class Init extends BaseCommand {
     // top-level package.json
     try {
       statSync(resolve(workspacePath, 'package.json'))
-    } catch {
+    } catch (err) {
       return
     }
 

@@ -47,7 +47,7 @@ Some tips:
   that name already, before you get too attached to it.
   <https://www.npmjs.com/>
 
-A name can be optionally prefixed by a scope, e.g. `@npm/example`. See
+A name can be optionally prefixed by a scope, e.g. `@myorg/mypackage`. See
 [`scope`](/using-npm/scope) for more detail.
 
 ### version
@@ -80,7 +80,7 @@ The URL to the project homepage.
 Example:
 
 ```json
-"homepage": "https://github.com/npm/example#readme"
+"homepage": "https://github.com/owner/project#readme"
 ```
 
 ### bugs
@@ -94,8 +94,8 @@ It should look like this:
 ```json
 {
   "bugs": {
-    "url": "https://github.com/npm/example/issues",
-    "email": "example@npmjs.com"
+    "url": "https://github.com/owner/project/issues",
+    "email": "project@hostname.com"
   }
 }
 ```
@@ -121,7 +121,7 @@ SPDX license identifier for the license you're using, like this:
 ```
 
 You can check [the full list of SPDX license
-IDs](https://spdx.org/licenses/).  Ideally, you should pick one that is
+IDs](https://spdx.org/licenses/).  Ideally you should pick one that is
 [OSI](https://opensource.org/licenses/) approved.
 
 If your package is licensed under multiple common licenses, use an [SPDX
@@ -204,8 +204,8 @@ like this:
 ```json
 {
   "name" : "Barney Rubble",
-  "email" : "barney@npmjs.com",
-  "url" : "http://barnyrubble.npmjs.com/"
+  "email" : "b@rubble.com",
+  "url" : "http://barnyrubble.tumblr.com/"
 }
 ```
 
@@ -214,7 +214,7 @@ you:
 
 ```json
 {
-  "author": "Barney Rubble <barney@npmjs.com> (http://barnyrubble.npmjs.com/)"
+  "author": "Barney Rubble <b@rubble.com> (http://barnyrubble.tumblr.com/)"
 }
 ```
 
@@ -232,7 +232,7 @@ string URL, or an array of objects and string URLs:
 {
   "funding": {
     "type" : "individual",
-    "url" : "http://npmjs.com/donate"
+    "url" : "http://example.com/donate"
   }
 }
 ```
@@ -241,14 +241,14 @@ string URL, or an array of objects and string URLs:
 {
   "funding": {
     "type" : "patreon",
-    "url" : "https://www.patreon.com/user"
+    "url" : "https://www.patreon.com/my-account"
   }
 }
 ```
 
 ```json
 {
-  "funding": "http://npmjs.com/donate"
+  "funding": "http://example.com/donate"
 }
 ```
 
@@ -257,12 +257,12 @@ string URL, or an array of objects and string URLs:
   "funding": [
     {
       "type" : "individual",
-      "url" : "http://npmjs.com/donate"
+      "url" : "http://example.com/donate"
     },
-    "http://npmjs.com/donate-also",
+    "http://example.com/donateAlso",
     {
       "type" : "patreon",
-      "url" : "https://www.patreon.com/user"
+      "url" : "https://www.patreon.com/my-account"
     }
   ]
 }
@@ -324,7 +324,6 @@ Some files are always ignored by default:
   if you wish it to be published)
 * `pnpm-lock.yaml`
 * `yarn.lock`
-* `bun.lockb`
 
 Most of these ignored files can be included specifically if included in
 the `files` globs.  Exceptions to this are:
@@ -335,7 +334,6 @@ the `files` globs.  Exceptions to this are:
 * `package-lock.json`
 * `pnpm-lock.yaml`
 * `yarn.lock`
-* `bun.lockb`
 
 These can not be included.
 
@@ -539,9 +537,9 @@ same shortcut syntax you use for `npm install`:
 
 ```json
 {
-  "repository": "npm/example",
+  "repository": "npm/npm",
 
-  "repository": "github:npm/example",
+  "repository": "github:user/repo",
 
   "repository": "gist:11081aaa281",
 
@@ -623,7 +621,7 @@ See [semver](https://github.com/npm/node-semver#versions) for more details about
 * `tag` A specific version tagged and published as `tag`  See [`npm
   dist-tag`](/commands/npm-dist-tag)
 * `path/path/path` See [Local Paths](#local-paths) below
-* `npm:@scope/pkg@version` Custom alias for a package See [`package-spec`](/using-npm/package-spec#aliases)
+* `npm:@scope/pkg@version` Custom alias for a pacakge See [`package-spec`](/using-npm/package-spec#aliases)
 
 For example, these are all valid:
 
@@ -635,7 +633,7 @@ For example, these are all valid:
     "baz": ">1.0.2 <=2.3.4",
     "boo": "2.0.1",
     "qux": "<1.0.0 || >=2.3.1 <2.4.5 || >=2.5.2 <3.0.0",
-    "asd": "http://npmjs.com/example.tar.gz",
+    "asd": "http://asdf.com/asdf.tar.gz",
     "til": "~1.2",
     "elf": "~1.2.3",
     "two": "2.x",
@@ -714,7 +712,7 @@ included.  For example:
   "dependencies": {
     "express": "expressjs/express",
     "mocha": "mochajs/mocha#4727d357ea",
-    "module": "npm/example-github-repo#feature\/branch"
+    "module": "user/repo#feature\/branch"
   }
 }
 ```
@@ -749,7 +747,7 @@ that require npm installing where you don't want to hit an external server,
 but should not be used when publishing your package to the public registry.
 
 *note*: Packages linked by local path will not have their own
-dependencies installed when `npm install` is run.  You must
+dependencies installed when `npm install` is ran in this case.  You must
 run `npm install` from inside the local path itself.
 
 ### devDependencies
@@ -773,7 +771,7 @@ For example:
 
 ```json
 {
-  "name": "@npm/ethopia-waza",
+  "name": "ethopia-waza",
   "description": "a delightfully fruity coffee varietal",
   "version": "1.2.3",
   "devDependencies": {
@@ -803,21 +801,21 @@ For example:
 
 ```json
 {
-  "name": "@npm/tea-latte",
+  "name": "tea-latte",
   "version": "1.3.5",
   "peerDependencies": {
-    "@npm/tea": "2.x"
+    "tea": "2.x"
   }
 }
 ```
 
-This ensures your package `@npm/tea-latte` can be installed *along* with the
-second major version of the host package `@npm/tea` only. `npm install
+This ensures your package `tea-latte` can be installed *along* with the
+second major version of the host package `tea` only. `npm install
 tea-latte` could possibly yield the following dependency graph:
 
 ```bash
-├── @npm/tea-latte@1.3.5
-└── @npm/tea@2.2.0
+├── tea-latte@1.3.5
+└── tea@2.2.0
 ```
 
 In npm versions 3 through 6, `peerDependencies` were not automatically
@@ -849,14 +847,14 @@ For example:
 
 ```json
 {
-  "name": "@npm/tea-latte",
+  "name": "tea-latte",
   "version": "1.3.5",
   "peerDependencies": {
-    "@npm/tea": "2.x",
-    "@npm/soy-milk": "1.2"
+    "tea": "2.x",
+    "soy-milk": "1.2"
   },
   "peerDependenciesMeta": {
-    "@npm/soy-milk": {
+    "soy-milk": {
       "optional": true
     }
   }
@@ -879,17 +877,17 @@ If we define a package.json like this:
 
 ```json
 {
-  "name": "@npm/awesome-web-framework",
+  "name": "awesome-web-framework",
   "version": "1.0.0",
   "bundleDependencies": [
-    "@npm/renderized",
-    "@npm/super-streams"
+    "renderized",
+    "super-streams"
   ]
 }
 ```
 
-we can obtain `@npm/awesome-web-framework-1.0.0.tgz` file by running `npm pack`.
-This file contains the dependencies `@npm/renderized` and `@npm/super-streams` which
+we can obtain `awesome-web-framework-1.0.0.tgz` file by running `npm pack`.
+This file contains the dependencies `renderized` and `super-streams` which
 can be installed in a new project by executing `npm install
 awesome-web-framework-1.0.0.tgz`.  Note that the package names do not
 include any versions, as that information is specified in `dependencies`.
@@ -914,8 +912,8 @@ dependency.  For example, something like this:
 
 ```js
 try {
-  var foo = require('@npm/foo')
-  var fooVersion = require('@npm/foo/package.json').version
+  var foo = require('foo')
+  var fooVersion = require('foo/package.json').version
 } catch (er) {
   foo = null
 }
@@ -957,49 +955,49 @@ what version your dependencies rely on:
 ```json
 {
   "overrides": {
-    "@npm/foo": "1.0.0"
+    "foo": "1.0.0"
   }
 }
 ```
 
 The above is a short hand notation, the full object form can be used to allow
 overriding a package itself as well as a child of the package. This will cause
-`@npm/foo` to always be `1.0.0` while also making `@npm/bar` at any depth beyond `@npm/foo`
+`foo` to always be `1.0.0` while also making `bar` at any depth beyond `foo`
 also `1.0.0`:
 
 ```json
 {
   "overrides": {
-    "@npm/foo": {
+    "foo": {
       ".": "1.0.0",
-      "@npm/bar": "1.0.0"
+      "bar": "1.0.0"
     }
   }
 }
 ```
 
-To only override `@npm/foo` to be `1.0.0` when it's a child (or grandchild, or great
-grandchild, etc) of the package `@npm/bar`:
+To only override `foo` to be `1.0.0` when it's a child (or grandchild, or great
+grandchild, etc) of the package `bar`:
 
 ```json
 {
   "overrides": {
-    "@npm/bar": {
-      "@npm/foo": "1.0.0"
+    "bar": {
+      "foo": "1.0.0"
     }
   }
 }
 ```
 
-Keys can be nested to any arbitrary length. To override `@npm/foo` only when it's a
-child of `@npm/bar` and only when `@npm/bar` is a child of `@npm/baz`:
+Keys can be nested to any arbitrary length. To override `foo` only when it's a
+child of `bar` and only when `bar` is a child of `baz`:
 
 ```json
 {
   "overrides": {
-    "@npm/baz": {
-      "@npm/bar": {
-        "@npm/foo": "1.0.0"
+    "baz": {
+      "bar": {
+        "foo": "1.0.0"
       }
     }
   }
@@ -1007,13 +1005,13 @@ child of `@npm/bar` and only when `@npm/bar` is a child of `@npm/baz`:
 ```
 
 The key of an override can also include a version, or range of versions.
-To override `@npm/foo` to `1.0.0`, but only when it's a child of `@npm/bar@2.0.0`:
+To override `foo` to `1.0.0`, but only when it's a child of `bar@2.0.0`:
 
 ```json
 {
   "overrides": {
-    "@npm/bar@2.0.0": {
-      "@npm/foo": "1.0.0"
+    "bar@2.0.0": {
+      "foo": "1.0.0"
     }
   }
 }
@@ -1028,7 +1026,7 @@ package you wish the version to match with a `$`.
 ```json
 {
   "dependencies": {
-    "@npm/foo": "^1.0.0"
+    "foo": "^1.0.0"
   },
   "overrides": {
     // BAD, will throw an EOVERRIDE error
@@ -1036,9 +1034,9 @@ package you wish the version to match with a `$`.
     // GOOD, specs match so override is allowed
     // "foo": "^1.0.0"
     // BEST, the override is defined as a reference to the dependency
-    "@npm/foo": "$foo",
+    "foo": "$foo",
     // the referenced package does not need to match the overridden one
-    "@npm/bar": "$foo"
+    "bar": "$foo"
   }
 }
 ```
@@ -1130,18 +1128,6 @@ Like the `os` option, you can also block architectures:
 ```
 
 The host architecture is determined by `process.arch`
-
-### libc
-
-If your code only runs or builds in certain versions of libc, you can
-specify which ones.  This field only applies if `os` is `linux`.
-
-```json
-{
-  "os": "linux",
-  "libc": "glibc"
-}
-```
 
 ### devEngines
 

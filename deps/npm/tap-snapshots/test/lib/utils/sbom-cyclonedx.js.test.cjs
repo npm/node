@@ -34,7 +34,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP node - with deps > must match snap
       "scope": "required",
       "author": "Author",
       "purl": "pkg:npm/root@1.0.0",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        }
+      ],
       "externalReferences": []
     }
   },
@@ -46,7 +51,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP node - with deps > must match snap
       "version": "0.0.1",
       "scope": "required",
       "purl": "pkg:npm/dep1@0.0.1",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/dep1"
+        }
+      ],
       "externalReferences": []
     },
     {
@@ -56,7 +66,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP node - with deps > must match snap
       "version": "0.0.2",
       "scope": "required",
       "purl": "pkg:npm/dep2@0.0.2",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/dep2"
+        }
+      ],
       "externalReferences": []
     }
   ],
@@ -77,66 +92,6 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP node - with deps > must match snap
       "dependsOn": [
         "dep1@0.0.1"
       ]
-    }
-  ]
-}
-`
-
-exports[`test/lib/utils/sbom-cyclonedx.js TAP node - with duplicate deps > must match snapshot 1`] = `
-{
-  "$schema": "http://cyclonedx.org/schema/bom-1.5.schema.json",
-  "bomFormat": "CycloneDX",
-  "specVersion": "1.5",
-  "serialNumber": "urn:uuid:00000000-0000-0000-0000-000000000000",
-  "version": 1,
-  "metadata": {
-    "timestamp": "2020-01-01T00:00:00.000Z",
-    "lifecycles": [
-      {
-        "phase": "build"
-      }
-    ],
-    "tools": [
-      {
-        "vendor": "npm",
-        "name": "cli",
-        "version": "10.0.0 "
-      }
-    ],
-    "component": {
-      "bom-ref": "root@1.0.0",
-      "type": "library",
-      "name": "root",
-      "version": "1.0.0",
-      "scope": "required",
-      "author": "Author",
-      "purl": "pkg:npm/root@1.0.0",
-      "properties": [],
-      "externalReferences": []
-    }
-  },
-  "components": [
-    {
-      "bom-ref": "dep1@0.0.1",
-      "type": "library",
-      "name": "dep1",
-      "version": "0.0.1",
-      "scope": "required",
-      "purl": "pkg:npm/dep1@0.0.1",
-      "properties": [],
-      "externalReferences": []
-    }
-  ],
-  "dependencies": [
-    {
-      "ref": "root@1.0.0",
-      "dependsOn": [
-        "dep1@0.0.1"
-      ]
-    },
-    {
-      "ref": "dep1@0.0.1",
-      "dependsOn": []
     }
   ]
 }
@@ -171,7 +126,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - application package 
       "scope": "required",
       "author": "Author",
       "purl": "pkg:npm/root@1.0.0",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        }
+      ],
       "externalReferences": []
     }
   },
@@ -215,6 +175,10 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - bundled > must match
       "author": "Author",
       "purl": "pkg:npm/root@1.0.0",
       "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        },
         {
           "name": "cdx:npm:package:bundled",
           "value": "true"
@@ -264,6 +228,10 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - development > must m
       "purl": "pkg:npm/root@1.0.0",
       "properties": [
         {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        },
+        {
           "name": "cdx:npm:package:development",
           "value": "true"
         }
@@ -312,6 +280,10 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - extraneous > must ma
       "purl": "pkg:npm/root@1.0.0",
       "properties": [
         {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        },
+        {
           "name": "cdx:npm:package:extraneous",
           "value": "true"
         }
@@ -358,7 +330,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - from git url > must 
       "scope": "required",
       "author": "Author",
       "purl": "pkg:npm/root@1.0.0?vcs_url=https://github.com/foo/bar#1234",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        }
+      ],
       "externalReferences": [
         {
           "type": "distribution",
@@ -405,7 +382,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - no package info > mu
       "version": "1.0.0",
       "scope": "required",
       "purl": "pkg:npm/root@1.0.0",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        }
+      ],
       "externalReferences": []
     }
   },
@@ -448,7 +430,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - optional > must matc
       "scope": "optional",
       "author": "Author",
       "purl": "pkg:npm/root@1.0.0",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        }
+      ],
       "externalReferences": []
     }
   },
@@ -491,7 +478,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - package lock only > 
       "scope": "required",
       "author": "Author",
       "purl": "pkg:npm/root@1.0.0",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        }
+      ],
       "externalReferences": []
     }
   },
@@ -535,6 +527,10 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - private > must match
       "author": "Author",
       "purl": "pkg:npm/root@1.0.0",
       "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        },
         {
           "name": "cdx:npm:package:private",
           "value": "true"
@@ -582,7 +578,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - with author object >
       "scope": "required",
       "author": "Arthur",
       "purl": "pkg:npm/root@1.0.0",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        }
+      ],
       "externalReferences": []
     }
   },
@@ -626,7 +627,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - with description > m
       "author": "Author",
       "description": "Package description",
       "purl": "pkg:npm/root@1.0.0",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        }
+      ],
       "externalReferences": []
     }
   },
@@ -669,7 +675,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - with distribution ur
       "scope": "required",
       "author": "Author",
       "purl": "pkg:npm/root@1.0.0",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        }
+      ],
       "externalReferences": [
         {
           "type": "distribution",
@@ -717,7 +728,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - with homepage > must
       "scope": "required",
       "author": "Author",
       "purl": "pkg:npm/root@1.0.0",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        }
+      ],
       "externalReferences": [
         {
           "type": "website",
@@ -765,7 +781,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - with integrity > mus
       "scope": "required",
       "author": "Author",
       "purl": "pkg:npm/root@1.0.0",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        }
+      ],
       "externalReferences": [],
       "hashes": [
         {
@@ -814,7 +835,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - with issue tracker >
       "scope": "required",
       "author": "Author",
       "purl": "pkg:npm/root@1.0.0",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        }
+      ],
       "externalReferences": [
         {
           "type": "issue-tracker",
@@ -862,7 +888,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - with license express
       "scope": "required",
       "author": "Author",
       "purl": "pkg:npm/root@1.0.0",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        }
+      ],
       "externalReferences": [],
       "licenses": [
         {
@@ -910,7 +941,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - with license object 
       "scope": "required",
       "author": "Author",
       "purl": "pkg:npm/root@1.0.0",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        }
+      ],
       "externalReferences": [],
       "licenses": [
         {
@@ -960,7 +996,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - with repository url 
       "scope": "required",
       "author": "Author",
       "purl": "pkg:npm/root@1.0.0",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        }
+      ],
       "externalReferences": [
         {
           "type": "vcs",
@@ -1008,7 +1049,12 @@ exports[`test/lib/utils/sbom-cyclonedx.js TAP single node - with single license 
       "scope": "required",
       "author": "Author",
       "purl": "pkg:npm/root@1.0.0",
-      "properties": [],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": ""
+        }
+      ],
       "externalReferences": [],
       "licenses": [
         {
