@@ -1990,10 +1990,10 @@ worker.on('online', async () => {
 `await using` example.
 
 ```cjs
-const { Worker } = require('node::worker_threads');
+const { Worker } = require('node:worker_threads');
 
 const w = new Worker(`
-  const { parentPort } = require('worker_threads');
+  const { parentPort } = require('node:worker_threads');
   parentPort.on('message', () => {});
   `, { eval: true });
 
@@ -2006,7 +2006,9 @@ w.on('online', async () => {
 ### `worker.startHeapProfile()`
 
 <!-- YAML
-added: v22.20.0
+added:
+  - v24.9.0
+  - v22.20.0
 -->
 
 * Returns: {Promise}
@@ -2033,10 +2035,10 @@ worker.on('online', async () => {
 `await using` example.
 
 ```cjs
-const { Worker } = require('node::worker_threads');
+const { Worker } = require('node:worker_threads');
 
 const w = new Worker(`
-  const { parentPort } = require('worker_threads');
+  const { parentPort } = require('node:worker_threads');
   parentPort.on('message', () => {});
   `, { eval: true });
 
