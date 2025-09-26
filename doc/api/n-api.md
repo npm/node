@@ -3299,6 +3299,10 @@ Specification.
 <!-- YAML
 added: v8.0.0
 napiVersion: 1
+changes:
+  - version: v24.9.0
+    pr-url: https://github.com/nodejs/node/pull/59071
+    description: Added support for `SharedArrayBuffer`.
 -->
 
 ```c
@@ -3309,21 +3313,20 @@ napi_status napi_get_arraybuffer_info(napi_env env,
 ```
 
 * `[in] env`: The environment that the API is invoked under.
-* `[in] arraybuffer`: `napi_value` representing the `ArrayBuffer` being queried.
-* `[out] data`: The underlying data buffer of the `ArrayBuffer`. If byte\_length
+* `[in] arraybuffer`: `napi_value` representing the `ArrayBuffer` or `SharedArrayBuffer` being queried.
+* `[out] data`: The underlying data buffer of the `ArrayBuffer` or `SharedArrayBuffer`
   is `0`, this may be `NULL` or any other pointer value.
 * `[out] byte_length`: Length in bytes of the underlying data buffer.
 
 Returns `napi_ok` if the API succeeded.
 
-This API is used to retrieve the underlying data buffer of an `ArrayBuffer` and
-its length.
+This API is used to retrieve the underlying data buffer of an `ArrayBuffer` or `SharedArrayBuffer` and its length.
 
 _WARNING_: Use caution while using this API. The lifetime of the underlying data
-buffer is managed by the `ArrayBuffer` even after it's returned. A
+buffer is managed by the `ArrayBuffer` or `SharedArrayBuffer` even after it's returned. A
 possible safe way to use this API is in conjunction with
 [`napi_create_reference`][], which can be used to guarantee control over the
-lifetime of the `ArrayBuffer`. It's also safe to use the returned data buffer
+lifetime of the `ArrayBuffer` or `SharedArrayBuffer`. It's also safe to use the returned data buffer
 within the same callback as long as there are no calls to other APIs that might
 trigger a GC.
 
@@ -4277,6 +4280,63 @@ The `ArrayBuffer` is considered detached if its internal data is `null`.
 This API represents the invocation of the `ArrayBuffer` `IsDetachedBuffer`
 operation as defined in [Section isDetachedBuffer][] of the ECMAScript Language
 Specification.
+
+### `node_api_is_sharedarraybuffer`
+
+<!-- YAML
+added: v24.9.0
+-->
+
+> Stability: 1 - Experimental
+
+```c
+napi_status node_api_is_sharedarraybuffer(napi_env env, napi_value value, bool* result)
+```
+
+* `[in] env`: The environment that the API is invoked under.
+* `[in] value`: The JavaScript value to check.
+* `[out] result`: Whether the given `napi_value` represents a `SharedArrayBuffer`.
+
+Returns `napi_ok` if the API succeeded.
+
+This API checks if the Object passed in is a `SharedArrayBuffer`.
+
+### `node_api_create_sharedarraybuffer`
+
+<!-- YAML
+added: v24.9.0
+-->
+
+> Stability: 1 - Experimental
+
+```c
+napi_status node_api_create_sharedarraybuffer(napi_env env,
+                                             size_t byte_length,
+                                             void** data,
+                                             napi_value* result)
+```
+
+* `[in] env`: The environment that the API is invoked under.
+* `[in] byte_length`: The length in bytes of the shared array buffer to create.
+* `[out] data`: Pointer to the underlying byte buffer of the `SharedArrayBuffer`.
+  `data` can optionally be ignored by passing `NULL`.
+* `[out] result`: A `napi_value` representing a JavaScript `SharedArrayBuffer`.
+
+Returns `napi_ok` if the API succeeded.
+
+This API returns a Node-API value corresponding to a JavaScript `SharedArrayBuffer`.
+`SharedArrayBuffer`s are used to represent fixed-length binary data buffers that
+can be shared across multiple workers.
+
+The `SharedArrayBuffer` allocated will have an underlying byte buffer whose size is
+determined by the `byte_length` parameter that's passed in.
+The underlying buffer is optionally returned back to the caller in case the
+caller wants to directly manipulate the buffer. This buffer can only be
+written to directly from native code. To write to this buffer from JavaScript,
+a typed array or `DataView` object would need to be created.
+
+JavaScript `SharedArrayBuffer` objects are described in
+[Section SharedArrayBuffer objects][] of the ECMAScript Language Specification.
 
 ## Working with JavaScript properties
 
@@ -5924,6 +5984,10 @@ the runtime.
 <!-- YAML
 added: v8.6.0
 napiVersion: 1
+changes:
+  - version: REPLACEME
+    pr-url: https://github.com/nodejs/node/pull/59828
+    description: The `async_resource` object will now be held as a strong reference.
 -->
 
 ```c
@@ -5943,22 +6007,18 @@ napi_status napi_async_init(napi_env env,
 
 Returns `napi_ok` if the API succeeded.
 
-The `async_resource` object needs to be kept alive until
-[`napi_async_destroy`][] to keep `async_hooks` related API acts correctly. In
-order to retain ABI compatibility with previous versions, `napi_async_context`s
-are not maintaining the strong reference to the `async_resource` objects to
-avoid introducing causing memory leaks. However, if the `async_resource` is
-garbage collected by JavaScript engine before the `napi_async_context` was
-destroyed by `napi_async_destroy`, calling `napi_async_context` related APIs
-like [`napi_open_callback_scope`][] and [`napi_make_callback`][] can cause
-problems like loss of async context when using the `AsyncLocalStorage` API.
-
 In order to retain ABI compatibility with previous versions, passing `NULL`
 for `async_resource` does not result in an error. However, this is not
 recommended as this will result in undesirable behavior with  `async_hooks`
 [`init` hooks][] and `async_hooks.executionAsyncResource()` as the resource is
 now required by the underlying `async_hooks` implementation in order to provide
 the linkage between async callbacks.
+
+Previous versions of this API were not maintaining a strong reference to
+`async_resource` while the `napi_async_context` object existed and instead
+expected the caller to hold a strong reference. This has been changed, as a
+corresponding call to [`napi_async_destroy`][] for every call to
+`napi_async_init()` is a requirement in any case to avoid memory leaks.
 
 ### `napi_async_destroy`
 
@@ -6791,6 +6851,7 @@ the add-on's file name during loading.
 [Section IsArray]: https://tc39.es/ecma262/#sec-isarray
 [Section IsStrctEqual]: https://tc39.es/ecma262/#sec-strict-equality-comparison
 [Section Promise objects]: https://tc39.es/ecma262/#sec-promise-objects
+[Section SharedArrayBuffer objects]: https://tc39.es/ecma262/#sec-sharedarraybuffer-objects
 [Section ToBoolean]: https://tc39.es/ecma262/#sec-toboolean
 [Section ToNumber]: https://tc39.es/ecma262/#sec-tonumber
 [Section ToObject]: https://tc39.es/ecma262/#sec-toobject

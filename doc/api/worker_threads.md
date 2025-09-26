@@ -724,7 +724,9 @@ This value is unique for each [`Worker`][] instance inside a single process.
 ## `worker.threadName`
 
 <!-- YAML
-added: v24.6.0
+added:
+  - v24.6.0
+  - v22.20.0
 -->
 
 * {string|null}
@@ -1988,16 +1990,61 @@ worker.on('online', async () => {
 `await using` example.
 
 ```cjs
-const { Worker } = require('node::worker_threads');
+const { Worker } = require('node:worker_threads');
 
 const w = new Worker(`
-  const { parentPort } = require('worker_threads');
+  const { parentPort } = require('node:worker_threads');
   parentPort.on('message', () => {});
   `, { eval: true });
 
 w.on('online', async () => {
   // Stop profile automatically when return and profile will be discarded
   await using handle = await w.startCpuProfile();
+});
+```
+
+### `worker.startHeapProfile()`
+
+<!-- YAML
+added:
+  - v24.9.0
+  - v22.20.0
+-->
+
+* Returns: {Promise}
+
+Starting a Heap profile then return a Promise that fulfills with an error
+or an `HeapProfileHandle` object. This API supports `await using` syntax.
+
+```cjs
+const { Worker } = require('node:worker_threads');
+
+const worker = new Worker(`
+  const { parentPort } = require('worker_threads');
+  parentPort.on('message', () => {});
+  `, { eval: true });
+
+worker.on('online', async () => {
+  const handle = await worker.startHeapProfile();
+  const profile = await handle.stop();
+  console.log(profile);
+  worker.terminate();
+});
+```
+
+`await using` example.
+
+```cjs
+const { Worker } = require('node:worker_threads');
+
+const w = new Worker(`
+  const { parentPort } = require('node:worker_threads');
+  parentPort.on('message', () => {});
+  `, { eval: true });
+
+w.on('online', async () => {
+  // Stop profile automatically when return and profile will be discarded
+  await using handle = await w.startHeapProfile();
 });
 ```
 
@@ -2073,7 +2120,9 @@ This value is unique for each `Worker` instance inside a single process.
 ### `worker.threadName`
 
 <!-- YAML
-added: v24.6.0
+added:
+  - v24.6.0
+  - v22.20.0
 -->
 
 * {string|null}

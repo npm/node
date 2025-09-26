@@ -3403,7 +3403,9 @@ Convert them to primitive strings.
 
 <!-- YAML
 changes:
-  - version: v24.8.0
+  - version:
+    - v24.8.0
+    - v22.20.0
     pr-url: https://github.com/nodejs/node/pull/59758
     description: Deprecation revoked.
   - version:
@@ -4108,7 +4110,7 @@ an internal nodejs implementation rather than a public facing API, use `node:htt
 
 <!-- YAML
 changes:
-  - version: REPLACEME
+  - version: v24.9.0
     pr-url: https://github.com/nodejs/node/pull/59839
     description: Documentation-only deprecation.
 -->

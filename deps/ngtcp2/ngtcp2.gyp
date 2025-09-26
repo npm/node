@@ -27,6 +27,7 @@
       'ngtcp2/lib/ngtcp2_objalloc.c',
       'ngtcp2/lib/ngtcp2_opl.c',
       'ngtcp2/lib/ngtcp2_path.c',
+      'ngtcp2/lib/ngtcp2_pcg.c',
       'ngtcp2/lib/ngtcp2_pkt.c',
       'ngtcp2/lib/ngtcp2_pmtud.c',
       'ngtcp2/lib/ngtcp2_ppe.c',
@@ -34,6 +35,7 @@
       'ngtcp2/lib/ngtcp2_pv.c',
       'ngtcp2/lib/ngtcp2_qlog.c',
       'ngtcp2/lib/ngtcp2_range.c',
+      'ngtcp2/lib/ngtcp2_ratelim.c',
       'ngtcp2/lib/ngtcp2_ringbuf.c',
       'ngtcp2/lib/ngtcp2_rob.c',
       'ngtcp2/lib/ngtcp2_rst.c',
@@ -123,7 +125,7 @@
             },
           },
         }],
-        ['OS=="linux" or OS=="android"', {
+        ['OS=="linux" or OS=="android" or OS=="openharmony"', {
           'defines': [
             'HAVE_ARPA_INET_H',
             'HAVE_NETINET_IN_H',
@@ -205,7 +207,7 @@
         ['OS!="win"', {
           'defines': ['HAVE_UNISTD_H']
         }],
-        ['OS=="linux" or OS=="android"', {
+        ['OS=="linux" or OS=="android" or OS=="openharmony"', {
           'defines': [
             'HAVE_ARPA_INET_H',
             'HAVE_NETINET_IN_H',

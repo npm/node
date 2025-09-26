@@ -96,6 +96,8 @@ const customTypesMap = {
   'EncapsulatedBits': 'webcrypto.html#class-encapsulatedbits',
   'EncapsulatedKey': 'webcrypto.html#class-encapsulatedkey',
   'SubtleCrypto': 'webcrypto.html#class-subtlecrypto',
+  'Template Literal':
+    `${jsDocPrefix}Reference/Template_literals`,
   'RsaOaepParams': 'webcrypto.html#class-rsaoaepparams',
   'AesCtrParams': 'webcrypto.html#class-aesctrparams',
   'AesCbcParams': 'webcrypto.html#class-aescbcparams',
@@ -234,6 +236,7 @@ const customTypesMap = {
 
   'Session': 'sqlite.html#class-session',
   'StatementSync': 'sqlite.html#class-statementsync',
+  'SQLTagStore': 'sqlite.html#class-sqltagstore',
 
   'Stream': 'stream.html#stream',
   'stream.Duplex': 'stream.html#class-streamduplex',
@@ -348,6 +351,7 @@ const customTypesMap = {
   'LockManager': 'worker_threads.html#class-lockmanager',
   'LockManagerSnapshot': 'https://developer.mozilla.org/en-US/docs/Web/API/LockManagerSnapshot',
   'CPUProfileHandle': 'v8.html#class-cpuprofilehandle',
+  'HeapProfileHandle': 'v8.html#class-heapprofilehandle',
 };
 
 const arrayPart = /(?:\[])+$/;
