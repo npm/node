@@ -82,27 +82,6 @@ template("node_gn_build") {
     ]
     configs = [ ":node_external_config" ]
     libs = []
-    cflags = [ "-Wno-microsoft-include" ]
-    cflags_cc = [
-      "-Wno-deprecated-declarations",
-      "-Wno-extra-semi",
-      "-Wno-implicit-fallthrough",
-      "-Wno-macro-redefined",
-      "-Wno-missing-braces",
-      "-Wno-range-loop-bind-reference",
-      "-Wno-return-type",
-      "-Wno-shadow",
-      "-Wno-sometimes-uninitialized",
-      "-Wno-string-plus-int",
-      "-Wno-string-conversion",
-      "-Wno-unreachable-code",
-      "-Wno-unreachable-code-break",
-      "-Wno-unreachable-code-return",
-      "-Wno-unused-label",
-      "-Wno-unused-private-field",
-      "-Wno-unused-variable",
-      "-Wno-unused-function",
-    ]
 
     if (current_cpu == "x86") {
       node_arch = "ia32"
@@ -378,7 +357,6 @@ template("node_gn_build") {
   }
 
   executable("node_cctest") {
-    testonly = true
     configs += [ ":node_internal_config" ]
 
     deps = [
