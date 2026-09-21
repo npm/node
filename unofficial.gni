@@ -82,7 +82,6 @@ template("node_gn_build") {
     ]
     configs = [ ":node_external_config" ]
     libs = []
-    ]
 
     if (current_cpu == "x86") {
       node_arch = "ia32"
@@ -357,7 +356,7 @@ template("node_gn_build") {
            node_deps_files
   }
 
-  executable("node_cctest") {p
+  executable("node_cctest") {
     configs += [ ":node_internal_config" ]
 
     deps = [
