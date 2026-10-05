@@ -45,7 +45,9 @@ void RecordTimestampStat(Stats* stats) {
   V(PACKETS_SENT, packets_sent)                                                \
   V(SERVER_SESSIONS, server_sessions)                                          \
   V(CLIENT_SESSIONS, client_sessions)                                          \
-  V(SERVER_BUSY_COUNT, server_busy_count)
+  V(SERVER_BUSY_COUNT, server_busy_count)                                      \
+  V(SERVER_REJECTED_COUNT, server_rejected_count)                              \
+  V(SERVER_REFUSED_COUNT, server_refused_count)
 
 #define DTLS_SESSION_STATS(V)                                                  \
   V(CREATED_AT, created_at)                                                    \
@@ -58,16 +60,18 @@ void RecordTimestampStat(Stats* stats) {
   V(MESSAGES_SENT, messages_sent)                                              \
   V(RETRANSMIT_COUNT, retransmit_count)
 
-// State indices shared between C++ and JS via AliasedStruct/DataView.
+// State "indices" shared between C++ and JS via AliasedStruct/DataView. These
+// are BYTE OFFSETS into the state struct, not sequential indices: session_count
+// is a uint32, so `busy`, which follows it, sits at byte offset 8. The
+// static_asserts in dtls_endpoint.cc pin these to the actual struct layout.
 // Keep in sync with lib/internal/dtls/state.js.
 enum DTLSEndpointStateIndex {
   IDX_ENDPOINT_STATE_BOUND = 0,
-  IDX_ENDPOINT_STATE_LISTENING,
-  IDX_ENDPOINT_STATE_CLOSING,
-  IDX_ENDPOINT_STATE_DESTROYED,
-  IDX_ENDPOINT_STATE_SESSION_COUNT,
-  IDX_ENDPOINT_STATE_BUSY,
-  IDX_ENDPOINT_STATE_COUNT
+  IDX_ENDPOINT_STATE_LISTENING = 1,
+  IDX_ENDPOINT_STATE_CLOSING = 2,
+  IDX_ENDPOINT_STATE_DESTROYED = 3,
+  IDX_ENDPOINT_STATE_SESSION_COUNT = 4,
+  IDX_ENDPOINT_STATE_BUSY = 8,
 };
 
 enum DTLSSessionStateIndex {
@@ -76,6 +80,7 @@ enum DTLSSessionStateIndex {
   IDX_SESSION_STATE_CLOSING,
   IDX_SESSION_STATE_DESTROYED,
   IDX_SESSION_STATE_HAS_MESSAGE_LISTENER,
+  IDX_SESSION_STATE_HAS_KEYLOG_LISTENER,
   IDX_SESSION_STATE_COUNT
 };
 
@@ -89,7 +94,6 @@ enum DTLSCallbackIndex {
   DTLS_CB_SESSION_HANDSHAKE,
   DTLS_CB_SESSION_MESSAGE,
   DTLS_CB_SESSION_KEYLOG,
-  DTLS_CB_SESSION_TICKET,
   DTLS_CB_COUNT
 };
 

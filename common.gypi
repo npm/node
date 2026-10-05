@@ -12,11 +12,13 @@
     'msvs_multi_core_compile': '0',   # we do enable multicore compiles, but not using the V8 way
     'enable_pgo_generate%': '0',
     'enable_pgo_use%': '0',
+    'pgo_profile%': '',
     'clang_profile_lib%': '',
     'python%': 'python',
     'emulator%': [],
 
     'node_shared%': 'false',
+    'node_enable_v8debughelper%': 'false',
     'node_enable_experimentals%': 'false',
     'force_dynamic_crt%': 0,
     'node_use_v8_platform%': 'true',
@@ -42,7 +44,7 @@
 
     # Reset this number to 0 on major V8 upgrades.
     # Increment by one for each non-official patch applied to deps/v8.
-    'v8_embedder_string': '-node.27',
+    'v8_embedder_string': '-node.36',
 
     ##### V8 defaults for Node.js #####
 
@@ -192,6 +194,7 @@
             }],
             ['clang==1', {
               'lto': ' -flto ', # Clang
+              'pgo_use': '-fprofile-use=<(pgo_profile)',
             }, {
               'lto': ' -flto=4 -ffat-lto-objects ', # GCC
             }],
@@ -246,6 +249,34 @@
               },],
             ],
           },],
+          ['OS=="mac"', {
+            'conditions': [
+              ['enable_pgo_generate=="true"', {
+                'xcode_settings': {
+                  'OTHER_CFLAGS': ['<(pgo_generate)'],
+                },
+                'target_conditions': [
+                  ['_type!="static_library"', {
+                    'xcode_settings': {
+                      'OTHER_LDFLAGS': ['<(pgo_generate)'],
+                    },
+                  }],
+                ],
+              }],
+              ['enable_pgo_use=="true"', {
+                'xcode_settings': {
+                  'OTHER_CFLAGS': ['<(pgo_use)'],
+                },
+                'target_conditions': [
+                  ['_type!="static_library"', {
+                    'xcode_settings': {
+                      'OTHER_LDFLAGS': ['<(pgo_use)'],
+                    },
+                  }],
+                ],
+              }],
+            ],
+          }],
           ['OS=="win"', {
             'conditions': [
               ['enable_lto=="true"', {
@@ -604,12 +635,16 @@
                     'cflags': [ '-mminimal-toc' ],
                   }],
                 ],
-                'cflags': [ '-m64' ],
-                'ldflags': [ '-m64' ],
+                'cflags': [ '-m64', '-mcpu=power9' ],
+                'ldflags': [ '-m64', '-mcpu=power9' ],
               }],
               [ 'host_arch=="s390x" and OS=="linux"', {
-                'cflags': [ '-m64', '-march=z196' ],
-                'ldflags': [ '-m64', '-march=z196' ],
+                'cflags': [ '-m64', '-march=z14' ],
+                'ldflags': [ '-m64', '-march=z14' ],
+              }],
+              [ 'host_arch=="riscv64" and OS=="linux"', {
+                'cflags': [ '-march=rv64gc' ],
+                'ldflags': [ '-march=rv64gc' ],
               }],
             ],
           }],
@@ -629,12 +664,16 @@
                     'cflags': [ '-mminimal-toc' ],
                   }],
                 ],
-                'cflags': [ '-m64' ],
-                'ldflags': [ '-m64' ],
+                'cflags': [ '-m64', '-mcpu=power9' ],
+                'ldflags': [ '-m64', '-mcpu=power9' ],
               }],
               [ 'target_arch=="s390x" and OS=="linux"', {
-                'cflags': [ '-m64', '-march=z196' ],
-                'ldflags': [ '-m64', '-march=z196' ],
+                'cflags': [ '-m64', '-march=z14' ],
+                'ldflags': [ '-m64', '-march=z14' ],
+              }],
+              [ 'target_arch=="riscv64" and OS=="linux"', {
+                'cflags': [ '-march=rv64gc' ],
+                'ldflags': [ '-march=rv64gc' ],
               }],
             ],
           }],
@@ -646,7 +685,9 @@
             'cflags!': [ '-pthread' ],
             'ldflags!': [ '-pthread' ],
           }],
-          [ 'node_shared=="true"', {
+          # The V8 static libraries get linked into libv8_debug_helper, so they
+          # have to be position independent too.
+          [ 'node_shared=="true" or node_enable_v8debughelper=="true"', {
             'cflags': [ '-fPIC' ],
             'ldflags': [ '-fPIC' ],
           }],

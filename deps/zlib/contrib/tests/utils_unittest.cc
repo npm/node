@@ -19,7 +19,16 @@
 #include "third_party/zlib/contrib/minizip/zip.h"
 #endif
 
+#include "compare256.h"
 #include "zlib.h"
+
+// Some tests are for little endian optimizations and should be skipped if
+// running on big endian.
+#if !defined(__BYTE_ORDER__) || __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define ZLIB_TEST_LITTLE_ENDIAN 1
+#else
+#define ZLIB_TEST_LITTLE_ENDIAN 0
+#endif
 
 void TestPayloads(size_t input_size, zlib_internal::WrapperType type,
                   const int compression_level = Z_DEFAULT_COMPRESSION) {
@@ -1239,6 +1248,55 @@ TEST(ZlibTest, InflateCopySIGILLReproduction) {
   }
 }
 
+TEST(ZlibTest, InflateChunkRefillDistanceBitBudget) {
+  // Tests the edge case where one fast-loop iteration uses 10 + 10 + 15 + 5 +
+  // 15 = 55 of the 56 bits a refill. There should be sufficient bits for the
+  // next iteration.
+  static const uint8_t kCompressed[] = {
+      0xcd, 0xef, 0x01, 0x82, 0x24, 0x49, 0x92, 0x24, 0x49, 0x22, 0xb1, 0xa8,
+      0x79, 0xf5, 0xec, 0x2f, 0x33, 0xf3, 0x17, 0xf7, 0x7a, 0xf8, 0xc6, 0x1d,
+      0x20, 0xb1, 0xa8, 0x79, 0x64, 0xf5, 0xec, 0xfd, 0xf3, 0xef, 0xff, 0x1f,
+      0xfc, 0xff, 0xfe, 0xfd, 0xe7, 0xdf, 0xff, 0x3f, 0xf8, 0xff, 0xfd, 0xfb,
+      0xcf, 0xbf, 0xff, 0x7f, 0xf0, 0xff, 0xfb, 0x17};
+  std::vector<uint8_t> output(402 + 512);
+  z_stream stream = {};
+  stream.next_in = const_cast<uint8_t*>(kCompressed);
+  stream.avail_in = sizeof(kCompressed);
+  stream.next_out = output.data();
+  stream.avail_out = output.size();
+
+  ASSERT_EQ(Z_OK, inflateInit2(&stream, -MAX_WBITS));
+  EXPECT_EQ(Z_STREAM_END, inflate(&stream, Z_FINISH));
+  EXPECT_EQ(402u, stream.total_out);
+  EXPECT_EQ(Z_OK, inflateEnd(&stream));
+  EXPECT_EQ('b', output[133]);  // Decodes as 'a' if the refill is not reached.
+}
+
+TEST(ZlibTest, InflateChunkRefillLiteralBitBudget) {
+  // Test an edge case where an iteration ends at a literal. and returns to the
+  // top of the inflate loop.
+  static const uint8_t kCompressed[] = {
+      0x05, 0xe0, 0x81, 0x81, 0x04, 0x49, 0x92, 0x24, 0x49, 0xb2, 0xa8, 0x79,
+      0x64, 0xcf, 0x1e, 0x96, 0x55, 0x05, 0xc5, 0x3f, 0xf4, 0x44, 0xff, 0xfe,
+      0xf7, 0xcf, 0x3f, 0xff, 0xbf, 0x7f, 0xff, 0xfb, 0xe7, 0x9f, 0xff, 0xdf,
+      0xbf, 0xff, 0xfd, 0xf3, 0xcf, 0xff, 0xef, 0xdf, 0xff, 0xfe, 0xf9, 0xe7,
+      0xff, 0xf7, 0xef, 0x7f, 0xff, 0xfc, 0xf3, 0xff, 0xfb, 0xf7, 0xbf, 0x7f,
+      0xfe, 0xf9, 0xff, 0x01};
+  std::vector<uint8_t> output(30 + 512);
+  z_stream stream = {};
+  stream.next_in = const_cast<uint8_t*>(kCompressed);
+  stream.avail_in = sizeof(kCompressed);
+  stream.next_out = output.data();
+  stream.avail_out = output.size();
+
+  ASSERT_EQ(Z_OK, inflateInit2(&stream, -MAX_WBITS));
+  EXPECT_EQ(Z_STREAM_END, inflate(&stream, Z_FINISH));
+  EXPECT_EQ(30u, stream.total_out);
+  EXPECT_EQ(Z_OK, inflateEnd(&stream));
+  // Decodes as 'a' if the accumulator runs short before the next lookup.
+  EXPECT_EQ('b', output[5]);
+}
+
 // TODO(gustavoa): make these tests run standalone.
 #ifndef CMAKE_STANDALONE_UNITTESTS
 
@@ -1475,4 +1533,33 @@ TEST(ZlibTest, Crbug500521311) {
   EXPECT_EQ(unzClose(uzf), UNZ_OK);
 }
 
+// compare256() returns the number of equal leading bytes. The buffers are
+// exactly the 256 bytes it may read, so ASan traps any over-read.
+TEST(ZlibTest, Compare256) {
+  if (!ZLIB_TEST_LITTLE_ENDIAN) {
+    GTEST_SKIP() << "compare256() is little-endian only";
+  }
+  for (int equal = 0; equal <= 256; ++equal) {
+    std::vector<unsigned char> a(256, 'a'), b(256, 'a');
+    if (equal < 256)
+      b[equal] = 'b';
+    EXPECT_EQ(compare256(a.data(), b.data()), equal);
+  }
+}
+
+// longest_match() computes 2 + compare256(scan + 2, match + 2), the first two
+// bytes being known equal, so a match must still reach MAX_MATCH (258).
+TEST(ZlibTest, Compare256ReachesMaxMatch) {
+  if (!ZLIB_TEST_LITTLE_ENDIAN) {
+    GTEST_SKIP() << "compare256() is little-endian only";
+  }
+  for (int match_len = 250; match_len <= 258; ++match_len) {
+    std::vector<unsigned char> a(258, 'a'), b(258, 'a');
+    if (match_len < 258)
+      b[match_len] = 'b';
+    EXPECT_EQ(2 + compare256(a.data() + 2, b.data() + 2), match_len);
+  }
+}
+
 #endif
+

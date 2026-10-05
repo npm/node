@@ -7,7 +7,7 @@ if (!common.hasCrypto)
   common.skip('missing crypto');
 
 const assert = require('assert');
-const { hasOpenSSL } = require('../common/crypto');
+const { hasOpenSSL, isBoringSSL } = require('../common/crypto');
 const { types: { isCryptoKey } } = require('util');
 const { internalBinding } = require('internal/test/binding');
 const {
@@ -15,10 +15,8 @@ const {
 } = require('internal/crypto/keys');
 const {
   getUsagesMask,
+  jobPromise,
 } = require('internal/crypto/util');
-const {
-  aesCipher,
-} = require('internal/crypto/aes');
 
 const {
   AESCipherJob,
@@ -135,11 +133,13 @@ async function withObjectPrototypeSetters(names, fn) {
         Buffer.alloc(15)),
       /Invalid initialization vector/);
 
-    const promise = aesCipher(
+    const promise = jobPromise(() => new AESCipherJob(
+      kCryptoJobWebCrypto,
       kWebCryptoCipherEncrypt,
-      key,
+      getCryptoKeyHandle(key),
       Buffer.alloc(16),
-      { name: 'AES-CBC', iv: Buffer.alloc(15) });
+      kKeyVariantAES_CBC_128,
+      Buffer.alloc(15)));
 
     assert.strictEqual(Object.getPrototypeOf(promise), Promise.prototype);
     await assert.rejects(promise, (err) => {
@@ -211,7 +211,7 @@ async function withObjectPrototypeSetters(names, fn) {
     }
   }
 
-  if (hasOpenSSL(3, 5) || process.features.openssl_is_boringssl) {
+  if (hasOpenSSL(3, 5) || isBoringSSL) {
     const pair = await subtle.generateKey(
       { name: 'ML-KEM-768' },
       true,

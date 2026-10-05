@@ -397,6 +397,32 @@ error object, such as a {Proxy}.
 Indicates the failure of an assertion. For details, see
 [`Class: assert.AssertionError`][].
 
+## Class: `DOMException`
+
+<!-- YAML
+added: v17.0.0
+-->
+
+* Extends: {errors.Error}
+
+The Web IDL {DOMException} class. These errors are thrown by web-platform APIs
+in Node.js such as [`fetch()`][], {AbortController}, {AbortSignal}, and Web
+Streams. For details, see also [`Class: DOMException`][] on the Globals page.
+
+The [`domException.name`][] property identifies the type of the exception (for
+example, `'AbortError'`). Unlike most errors in Node.js, the
+[`domException.code`][] property is a number that corresponds to a
+[legacy error code name][Web IDL error names] (for example, `20` for
+`ABORT_ERR`).
+
+Node.js-specific APIs that support {AbortSignal} (such as
+[`events.once()`][]) throw a Node.js `AbortError` (a native {errors.Error} with
+`name` of `'AbortError'` and `code` of [`'ABORT_ERR'`][ABORT_ERR]) rather than a
+{DOMException}. To identify abort errors in either case, checking
+`err?.name === 'AbortError'` is sufficient.
+
+See also [`ABORT_ERR`][].
+
 ## Class: `RangeError`
 
 * Extends: {errors.Error}
@@ -936,7 +962,7 @@ be called no more than one time per instance of a `Hash` object.
 
 ### `ERR_CRYPTO_HASH_UPDATE_FAILED`
 
-[`hash.update()`][] failed for any reason. This should rarely, if ever, happen.
+[`hash.update()`][] failed for an unspecified reason.
 
 <a id="ERR_CRYPTO_INCOMPATIBLE_KEY"></a>
 
@@ -1052,6 +1078,16 @@ An invalid key type was provided.
 
 The given crypto key object's type is invalid for the attempted operation.
 
+<a id="ERR_CRYPTO_INVALID_MAC"></a>
+
+### `ERR_CRYPTO_INVALID_MAC`
+
+<!-- YAML
+added: v26.9.0
+-->
+
+An invalid MAC algorithm was specified.
+
 <a id="ERR_CRYPTO_INVALID_MESSAGELEN"></a>
 
 ### `ERR_CRYPTO_INVALID_MESSAGELEN`
@@ -1124,6 +1160,37 @@ added: v24.7.0
 
 Attempted to use KEM operations while Node.js was not compiled with
 OpenSSL with KEM support.
+
+<a id="ERR_CRYPTO_MAC_FINALIZED"></a>
+
+### `ERR_CRYPTO_MAC_FINALIZED`
+
+<!-- YAML
+added: v26.9.0
+-->
+
+An operation was attempted on a `Mac` object after finalization was attempted
+or an underlying MAC update failed.
+
+<a id="ERR_CRYPTO_MAC_NOT_SUPPORTED"></a>
+
+### `ERR_CRYPTO_MAC_NOT_SUPPORTED`
+
+<!-- YAML
+added: v26.9.0
+-->
+
+Node.js was built without support for the OpenSSL `EVP_MAC` API.
+
+<a id="ERR_CRYPTO_MAC_UPDATE_FAILED"></a>
+
+### `ERR_CRYPTO_MAC_UPDATE_FAILED`
+
+<!-- YAML
+added: v26.9.0
+-->
+
+[`mac.update()`][] failed for an unspecified reason.
 
 <a id="ERR_CRYPTO_OPERATION_FAILED"></a>
 
@@ -1508,7 +1575,7 @@ New HTTP/2 Streams may not be opened after the `Http2Session` has received a
 
 ### `ERR_HTTP2_HEADERS_AFTER_RESPOND`
 
-An additional headers was specified after an HTTP/2 response was initiated.
+Additional headers were specified after an HTTP/2 response was initiated.
 
 <a id="ERR_HTTP2_HEADERS_SENT"></a>
 
@@ -2549,7 +2616,9 @@ package specifier mapping.
 ### `ERR_PACKAGE_MAP_EXTERNAL_FILE`
 
 <!-- YAML
-added: v26.4.0
+added:
+ - v26.4.0
+ - v24.20.0
 -->
 
 A module attempted to resolve a bare specifier using the [package map][], but
@@ -2569,7 +2638,9 @@ covers the importing file.
 ### `ERR_PACKAGE_MAP_INVALID`
 
 <!-- YAML
-added: v26.4.0
+added:
+ - v26.4.0
+ - v24.20.0
 -->
 
 The [package map][] configuration file is invalid. This can occur when:
@@ -2590,7 +2661,9 @@ Error [ERR_PACKAGE_MAP_INVALID]: Invalid package map at "./missing.json": file n
 ### `ERR_PACKAGE_MAP_KEY_NOT_FOUND`
 
 <!-- YAML
-added: v26.4.0
+added:
+ - v26.4.0
+ - v24.20.0
 -->
 
 A package's `dependencies` object in the [package map][] references a package
@@ -2757,7 +2830,9 @@ Opening a QUIC stream failed.
 ### `ERR_QUIC_STREAM_ABORTED`
 
 <!-- YAML
-added: v26.2.0
+added:
+ - v26.2.0
+ - v24.20.0
 -->
 
 > Stability: 1 - Experimental
@@ -2770,7 +2845,9 @@ or session with an explicit application or transport error code.
 ### `ERR_QUIC_STREAM_RESET`
 
 <!-- YAML
-added: v26.2.0
+added:
+ - v26.2.0
+ - v24.20.0
 -->
 
 > Stability: 1 - Experimental
@@ -2812,12 +2889,14 @@ A QUIC session failed because version negotiation is required.
 
 <!-- YAML
 changes:
-  - version: v26.5.0
+  - version:
+     - v26.5.0
+     - v24.20.0
     pr-url: https://github.com/nodejs/node/pull/64260
     description: Added the `requireStack` and `topLevelAwaitLocations` properties.
 -->
 
-When trying to `require()` a [ES Module][], the module turns out to be asynchronous.
+When trying to `require()` an [ES Module][], the module turns out to be asynchronous.
 That is, it contains top-level await.
 
 When uncaught, the flag `--experimental-print-required-tla` prints
@@ -2839,7 +2918,7 @@ This error has the following additional non-enumerable properties:
 
 ### `ERR_REQUIRE_CYCLE_MODULE`
 
-When trying to `require()` a [ES Module][], a CommonJS to ESM or ESM to CommonJS edge
+When trying to `require()` an [ES Module][], a CommonJS to ESM or ESM to CommonJS edge
 participates in an immediate cycle.
 This is not allowed because ES Modules cannot be evaluated while they are
 already being evaluated.
@@ -3004,8 +3083,9 @@ A call was made and the UDP subsystem was not running.
 ### `ERR_SOCKET_HANDLE_ADOPTED`
 
 An operation was attempted on a [`BoundSocket`][] that had already been adopted
-by a [`net.Server`][] or [`net.Socket`][]. Once a bound socket is adopted, its
-`address()` and `close()` methods can no longer be used.
+by a [`net.Server`][] or [`net.Socket`][], or transferred to another thread.
+Once a bound socket is adopted or transferred, its `address()` and `close()`
+methods can no longer be used.
 
 <a id="ERR_SOURCE_MAP_CORRUPT"></a>
 
@@ -3159,6 +3239,13 @@ This error represents a failed test. Additional information about the failure
 is available via the `cause` property. The `failureType` property specifies
 what the test was doing when the failure occurred.
 
+<a id="ERR_THROTTLED"></a>
+
+### `ERR_THROTTLED`
+
+A call was dropped because a throttled function could not invoke it immediately
+or its pending queue was full.
+
 <a id="ERR_TLS_ALPN_CALLBACK_INVALID_RESULT"></a>
 
 ### `ERR_TLS_ALPN_CALLBACK_INVALID_RESULT`
@@ -3301,7 +3388,8 @@ category.
 ### `ERR_TRACE_EVENTS_UNAVAILABLE`
 
 The `node:trace_events` module could not be loaded because Node.js was compiled
-with the `--without-v8-platform` flag.
+with the `--without-v8-platform` flag, or because the process was initialized by
+an embedder that provides its own V8 platform.
 
 <a id="ERR_TRAILING_JUNK_AFTER_STREAM_END"></a>
 
@@ -3477,6 +3565,13 @@ An attempt was made to use something that was already closed.
 While using the Performance Timing API (`perf_hooks`), no valid performance
 entry types are found.
 
+<a id="ERR_VFS_INVALID_TARGET"></a>
+
+### `ERR_VFS_INVALID_TARGET`
+
+A `--vfs-load` source does not exist, is neither a regular file nor a
+directory, or is a source no provider claims.
+
 <a id="ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING"></a>
 
 ### `ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING`
@@ -3573,9 +3668,10 @@ The `Response` that has been passed to `WebAssembly.compileStreaming` or to
 
 ### `ERR_WORKER_HANDLE_NOT_TRANSFERABLE`
 
-An attempt was made to transfer a `net.Socket` or `net.Server` to another thread
-via a `worker_threads` `postMessage()` call while it was not in a transferable
-state, for example because it had already started reading or had buffered data.
+An attempt was made to transfer a `net.Socket`, `net.Server` or
+`net.BoundSocket` to another thread via a `worker_threads` `postMessage()` call
+while it was not in a transferable state, for example because it had already
+started reading, had buffered data, or had already been adopted.
 
 <a id="ERR_WORKER_INIT_FAILED"></a>
 
@@ -3668,6 +3764,58 @@ All attempts at serializing an uncaught exception from a worker thread failed.
 ### `ERR_WORKER_UNSUPPORTED_OPERATION`
 
 The requested functionality is not supported in worker threads.
+
+<a id="ERR_ZIP_ARCHIVE_TOO_LARGE"></a>
+
+### `ERR_ZIP_ARCHIVE_TOO_LARGE`
+
+An archive-level structure exceeds a limit: the archive comment exceeds the
+65,535-byte encoded length that the ZIP format allows, or the archive's
+central directory is too large to buffer in memory.
+
+<a id="ERR_ZIP_ENTRY_CORRUPT"></a>
+
+### `ERR_ZIP_ENTRY_CORRUPT`
+
+A ZIP archive entry failed CRC-32 verification, or produced more or fewer
+bytes than its declared uncompressed size, while being read.
+
+<a id="ERR_ZIP_ENTRY_NOT_FOUND"></a>
+
+### `ERR_ZIP_ENTRY_NOT_FOUND`
+
+A named entry was requested from a [`ZipFile`][] or [`ZipBuffer`][] that does
+not contain an entry with that name.
+
+<a id="ERR_ZIP_ENTRY_TOO_LARGE"></a>
+
+### `ERR_ZIP_ENTRY_TOO_LARGE`
+
+A ZIP archive entry's declared size exceeds the configured limit, or a
+provided entry name or comment exceeds the 65,535-byte encoded length that
+the ZIP format allows.
+
+<a id="ERR_ZIP_INVALID_ARCHIVE"></a>
+
+### `ERR_ZIP_INVALID_ARCHIVE`
+
+Data that was expected to be a ZIP archive, or a structure within one, is
+missing, out of bounds, or otherwise inconsistent with the ZIP format.
+
+<a id="ERR_ZIP_NOT_WRITABLE"></a>
+
+### `ERR_ZIP_NOT_WRITABLE`
+
+A mutating method (such as `zipFile.addEntry()` or `zipFile.delete()`) was
+called on a [`ZipFile`][] that was not opened with `{ writable: true }`.
+
+<a id="ERR_ZIP_UNSUPPORTED_FEATURE"></a>
+
+### `ERR_ZIP_UNSUPPORTED_FEATURE`
+
+A ZIP archive uses a feature outside of what this implementation supports,
+such as entry encryption, an unsupported compression method, or a multi-disk
+archive.
 
 <a id="ERR_ZLIB_INITIALIZATION_FAILED"></a>
 
@@ -4575,6 +4723,7 @@ The public key in the certificate SubjectPublicKeyInfo could not be read.
 
 An error occurred trying to allocate memory. This should never happen.
 
+[ABORT_ERR]: #abort_err
 [ES Module]: esm.md
 [ICU]: intl.md#internationalization-support
 [JSON Web Key Elliptic Curve Registry]: https://www.iana.org/assignments/jose/jose.xhtml#web-key-elliptic-curve
@@ -4588,6 +4737,7 @@ An error occurred trying to allocate memory. This should never happen.
 [V8's stack trace API]: https://v8.dev/docs/stack-trace-api
 [WHATWG Supported Encodings]: util.md#whatwg-supported-encodings
 [WHATWG URL API]: url.md#the-whatwg-url-api
+[Web IDL error names]: https://webidl.spec.whatwg.org/#dfn-error-names-table
 [`"exports"`]: packages.md#exports
 [`"imports"`]: packages.md#imports
 [`'uncaughtException'`]: process.md#event-uncaughtexception
@@ -4595,7 +4745,9 @@ An error occurred trying to allocate memory. This should never happen.
 [`--force-fips`]: cli.md#--force-fips
 [`--no-addons`]: cli.md#--no-addons
 [`--unhandled-rejections`]: cli.md#--unhandled-rejectionsmode
+[`ABORT_ERR`]: #abort_err
 [`BoundSocket`]: net.md#class-netboundsocket
+[`Class: DOMException`]: globals.md#class-domexception
 [`Class: assert.AssertionError`]: assert.md#class-assertassertionerror
 [`ERR_INCOMPATIBLE_OPTION_PAIR`]: #err_incompatible_option_pair
 [`ERR_INVALID_ARG_TYPE`]: #err_invalid_arg_type
@@ -4612,6 +4764,8 @@ An error occurred trying to allocate memory. This should never happen.
 [`ServerResponse`]: http.md#class-httpserverresponse
 [`Temporal`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal
 [`Writable`]: stream.md#class-streamwritable
+[`ZipBuffer`]: zlib.md#class-zlibzipbuffer
+[`ZipFile`]: zlib.md#class-zlibzipfile
 [`child_process`]: child_process.md
 [`cipher.getAuthTag()`]: crypto.md#ciphergetauthtag
 [`crypto.getDiffieHellman()`]: crypto.md#cryptogetdiffiehellmangroupname
@@ -4622,10 +4776,13 @@ An error occurred trying to allocate memory. This should never happen.
 [`dgram.createSocket()`]: dgram.md#dgramcreatesocketoptions-callback
 [`dgram.disconnect()`]: dgram.md#socketdisconnect
 [`dgram.remoteAddress()`]: dgram.md#socketremoteaddress
+[`domException.code`]: https://developer.mozilla.org/en-US/docs/Web/API/DOMException/code
 [`domException.name`]: https://developer.mozilla.org/en-US/docs/Web/API/DOMException/name
 [`errno`(3) man page]: https://man7.org/linux/man-pages/man3/errno.3.html
 [`error.code`]: #errorcode
 [`error.message`]: #errormessage
+[`events.once()`]: events.md#eventsonceemitter-name-options
+[`fetch()`]: globals.md#fetch
 [`fs.Dir`]: fs.md#class-fsdir
 [`fs.cp()`]: fs.md#fscpsrc-dest-options-callback
 [`fs.readFileSync`]: fs.md#fsreadfilesyncpath-options
@@ -4639,6 +4796,7 @@ An error occurred trying to allocate memory. This should never happen.
 [`http`]: http.md
 [`https`]: https.md
 [`libuv Error handling`]: https://docs.libuv.org/en/v1.x/errors.html
+[`mac.update()`]: crypto.md#macupdatedata-inputencoding
 [`net.Server`]: net.md#class-netserver
 [`net.Socket.write()`]: net.md#socketwritedata-encoding-callback
 [`net.Socket`]: net.md#class-netsocket

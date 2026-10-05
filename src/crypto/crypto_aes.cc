@@ -47,6 +47,13 @@ WebCryptoCipherStatus AES_Cipher(Environment* env,
                                  ByteSource* out) {
   CHECK_EQ(key_data.GetKeyType(), kKeyTypeSecret);
 
+  const bool encrypt = cipher_mode == kWebCryptoCipherEncrypt;
+  // AES-KW requires at least two 64-bit plaintext blocks, plus the
+  // 64-bit integrity check value when unwrapping.
+  if (params.cipher.isWrapMode() && in.size() < (encrypt ? 16u : 24u)) {
+    return WebCryptoCipherStatus::FAILED;
+  }
+
   auto ctx = CipherCtxPointer::New();
   if (!ctx) {
     return WebCryptoCipherStatus::FAILED;
@@ -55,8 +62,6 @@ WebCryptoCipherStatus AES_Cipher(Environment* env,
   if (params.cipher.isWrapMode()) {
     ctx.setAllowWrap();
   }
-
-  const bool encrypt = cipher_mode == kWebCryptoCipherEncrypt;
 
   if (!ctx.init(params.cipher, encrypt)) {
     // Cipher init failed
@@ -259,7 +264,7 @@ WebCryptoCipherStatus AES_KW_Cipher(Environment* env,
 // implementation here:
 // https://github.com/chromium/chromium/blob/7af6cfd/components/webcrypto/algorithms/aes_ctr.cc
 
-template <typename T>
+template <std::integral T>
 T CeilDiv(T a, T b) {
   return a == 0 ? 0 : 1 + (a - 1) / b;
 }
@@ -568,8 +573,13 @@ Maybe<void> AESCipherTraits::AdditionalConfig(
     UseDefaultIV(params);
   }
 
-  // For OCB mode, allow variable IV lengths (1-15 bytes)
-  if (params->cipher.isOcbMode()) {
+  if (params->cipher.isGcmMode()) {
+    if (params->iv.size() == 0) {
+      THROW_ERR_CRYPTO_INVALID_IV(env);
+      return Nothing<void>();
+    }
+  } else if (params->cipher.isOcbMode()) {
+    // For OCB mode, allow variable IV lengths (1-15 bytes).
     if (params->iv.size() == 0 || params->iv.size() > 15) {
       THROW_ERR_CRYPTO_INVALID_IV(env);
       return Nothing<void>();

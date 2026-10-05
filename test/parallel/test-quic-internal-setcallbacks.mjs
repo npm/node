@@ -26,11 +26,13 @@ const callbacks = {
   onSessionOrigin() {},
   onSessionGoaway() {},
   onSessionVersionNegotiation() {},
+  onStreamAvailable() {},
   onStreamCreated() {},
   onStreamBlocked() {},
   onStreamClose() {},
   onStreamDrain() {},
   onStreamReset() {},
+  onStreamStopSending() {},
   onStreamHeaders() {},
   onStreamTrailers() {},
 };

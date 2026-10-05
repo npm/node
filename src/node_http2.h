@@ -39,11 +39,15 @@ constexpr size_t kDefaultMaxSettings = 10;
 // Default maximum total memory cap for Http2Session.
 constexpr uint64_t kDefaultMaxSessionMemory = 10000000;
 
+// Default connection-level flow control window (32MB) to improve throughput
+// on high-latency connections. See https://github.com/nodejs/node/issues/38426
+constexpr int32_t kDefaultConnectionWindowSize = 33554432;
+
 // These are the standard HTTP/2 defaults as specified by the RFC
 constexpr uint32_t DEFAULT_SETTINGS_HEADER_TABLE_SIZE = 4096;
 constexpr uint32_t DEFAULT_SETTINGS_ENABLE_PUSH = 1;
 constexpr uint32_t DEFAULT_SETTINGS_MAX_CONCURRENT_STREAMS = 0xffffffffu;
-constexpr uint32_t DEFAULT_SETTINGS_INITIAL_WINDOW_SIZE = 65535;
+constexpr uint32_t DEFAULT_SETTINGS_INITIAL_WINDOW_SIZE = 4194304;
 constexpr uint32_t DEFAULT_SETTINGS_MAX_FRAME_SIZE = 16384;
 constexpr uint32_t DEFAULT_SETTINGS_MAX_HEADER_LIST_SIZE = 65535;
 constexpr uint32_t DEFAULT_SETTINGS_ENABLE_CONNECT_PROTOCOL = 0;
@@ -81,9 +85,8 @@ constexpr int kSessionStateClosing = 0x8;
 constexpr int kSessionStateSending = 0x10;
 constexpr int kSessionStateWriteInProgress = 0x20;
 constexpr int kSessionStateReadingStopped = 0x40;
-constexpr int kSessionStateReceivePaused = 0x80;
-constexpr int kSessionStateReceiving = 0x100;
-constexpr int kSessionStateClosePending = 0x200;
+constexpr int kSessionStateReceiving = 0x80;
+constexpr int kSessionStateClosePending = 0x100;
 
 // The Padding Strategy determines the method by which extra padding is
 // selected for HEADERS and DATA frames. These are configurable via the
@@ -242,9 +245,16 @@ class Http2Options {
     return max_session_memory_;
   }
 
+  void set_connection_window_size(int32_t size) {
+    connection_window_size_ = size;
+  }
+
+  int32_t connection_window_size() const { return connection_window_size_; }
+
  private:
   Nghttp2OptionPointer options_;
   uint64_t max_session_memory_ = kDefaultMaxSessionMemory;
+  int32_t connection_window_size_ = kDefaultConnectionWindowSize;
   uint32_t max_header_pairs_ = DEFAULT_MAX_HEADER_LIST_PAIRS;
   PaddingStrategy padding_strategy_ = PADDING_STRATEGY_NONE;
   size_t max_outstanding_pings_ = kDefaultMaxPings;
@@ -694,7 +704,6 @@ class Http2Session : public AsyncWrap,
   IS_FLAG(sending, kSessionStateSending)
   IS_FLAG(write_in_progress, kSessionStateWriteInProgress)
   IS_FLAG(reading_stopped, kSessionStateReadingStopped)
-  IS_FLAG(receive_paused, kSessionStateReceivePaused)
   IS_FLAG(receiving, kSessionStateReceiving)
   IS_FLAG(close_pending, kSessionStateClosePending)
 
@@ -975,7 +984,6 @@ class Http2Session : public AsyncWrap,
   // will be set. stream_buf_ab_ is lazily created from stream_buf_allocation_.
   v8::Global<v8::ArrayBuffer> stream_buf_ab_;
   std::unique_ptr<v8::BackingStore> stream_buf_allocation_;
-  size_t stream_buf_offset_ = 0;
   // Custom error code for errors that originated inside one of the callbacks
   // called by nghttp2_session_mem_recv.
   const char* custom_recv_error_code_ = nullptr;

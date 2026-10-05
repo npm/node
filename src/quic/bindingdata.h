@@ -55,12 +55,14 @@ class SessionManager;
   V(session_path_validation, SessionPathValidation)                            \
   V(session_ticket, SessionTicket)                                             \
   V(session_version_negotiation, SessionVersionNegotiation)                    \
+  V(stream_available, StreamAvailable)                                         \
   V(stream_blocked, StreamBlocked)                                             \
   V(stream_close, StreamClose)                                                 \
   V(stream_created, StreamCreated)                                             \
   V(stream_drain, StreamDrain)                                                 \
   V(stream_headers, StreamHeaders)                                             \
   V(stream_reset, StreamReset)                                                 \
+  V(stream_stop_sending, StreamStopSending)                                    \
   V(stream_trailers, StreamTrailers)
 
 // The various JS strings the implementation uses.
@@ -259,6 +261,7 @@ class CheckWrapHandle : public MemoryRetainer {
 // TODO(@jasnell): Make this snapshotable?
 class BindingData final
     : public BaseObject,
+      public Cleanable,
       public mem::NgLibMemoryManager<BindingData, ngtcp2_mem> {
  public:
   SET_BINDING_ID(quic_binding_data)
@@ -293,6 +296,8 @@ class BindingData final
   // Installs the set of JavaScript callback functions that are used to
   // bridge out to the JS API.
   JS_METHOD(SetCallbacks);
+  JS_METHOD(SendHeaders);
+  JS_METHOD(SetHeadersInterest);
 
   // Lazily-created per-Realm SessionManager. Centralizes CID -> Session
   // routing so that any endpoint can route packets to any session.
@@ -388,6 +393,9 @@ class BindingData final
   bool flush_check_started_ = false;
 
   void OnFlushCheck();
+
+ private:
+  void Clean() override;
 };
 
 JS_METHOD_IMPL(IllegalConstructor);

@@ -774,6 +774,9 @@ the API is not useful.
 
 <!-- YAML
 changes:
+  - version: REPLACEME
+    pr-url: https://github.com/nodejs/node/pull/65074
+    description: Runtime deprecation.
   - version:
     - v6.12.0
     - v4.8.6
@@ -784,9 +787,10 @@ changes:
     description: Documentation-only deprecation.
 -->
 
-Type: Documentation-only
+Type: Runtime
 
-The [`domain`][] module is deprecated and should not be used.
+The [`domain`][] module is deprecated and should not be used. Loading the
+module emits a runtime deprecation warning.
 
 ### DEP0033: `EventEmitter.listenerCount()`
 
@@ -4126,6 +4130,9 @@ and [`crypto.setEngine()`][] all depend on this functionality from OpenSSL.
 
 <!-- YAML
 changes:
+  - version: REPLACEME
+    pr-url: https://github.com/nodejs/node/pull/64849
+    description: End-of-Life.
   - version: v24.0.0
     pr-url: https://github.com/nodejs/node/pull/55718
     description: Runtime deprecation.
@@ -4136,11 +4143,12 @@ changes:
     description: Documentation-only deprecation.
 -->
 
-Type: Runtime
+Type: End-of-Life
 
-Instantiating classes without the `new` qualifier exported by the `node:zlib` module is deprecated.
-It is recommended to use the `new` qualifier instead. This applies to all Zlib classes, such as `Deflate`,
-`DeflateRaw`, `Gunzip`, `Inflate`, `InflateRaw`, `Unzip`, and `Zlib`.
+Instantiating classes without the `new` qualifier exported by the `node:zlib` module is no longer
+supported. The `new` qualifier must be used instead. This applies to all Zlib classes, such as
+`Deflate`, `DeflateRaw`, `Gunzip`, `Inflate`, `InflateRaw`, `Unzip`, `BrotliCompress`,
+`BrotliDecompress`, `ZstdCompress`, and `ZstdDecompress`.
 
 ### DEP0185: Instantiating `node:repl` classes without `new`
 
@@ -4341,6 +4349,9 @@ npx codemod@latest @nodejs/http2-priority-signaling
 
 <!-- YAML
 changes:
+  - version: REPLACEME
+    pr-url: https://github.com/nodejs/node/pull/64853
+    description: Runtime deprecation.
   - version:
       - v24.2.0
       - v22.17.0
@@ -4348,11 +4359,11 @@ changes:
     description: Documentation-only deprecation.
 -->
 
-Type: Documentation-only
+Type: Runtime
 
 Instantiating classes without the `new` qualifier exported by the `node:http` module is deprecated.
 It is recommended to use the `new` qualifier instead. This applies to all http classes, such as
-`OutgoingMessage`, `IncomingMessage`, `ServerResponse` and `ClientRequest`.
+`OutgoingMessage`, `IncomingMessage`, `ServerResponse`, `ClientRequest`, `Server`, and `Agent`.
 
 An automated migration is available ([source](https://github.com/nodejs/userland-migrations/tree/main/recipes/http-classes-with-new)):
 
@@ -4640,7 +4651,7 @@ throwing an error. This behavior is inconsistent with `hash.digest()` and
 may lead to subtle bugs. Calling `hmac.digest()` on a finalized `Hmac` instance
 will throw an error in a future version.
 
-### DEP0207: `.aborted` property and `'aborted'` event in `http2`
+### DEP0207: `.aborted` property and `'aborted'` event in `node:http2`
 
 <!-- YAML
 changes:
@@ -4694,6 +4705,130 @@ underlying stream are emitted from `req`. On the write-side you can use
 `res.writableFinished` to confirm whether the response was written
 successfully before the response closed.
 
+### DEP0208: `Server.prototype._listen2`
+
+<!-- YAML
+changes:
+  - version: v26.8.2
+    pr-url: https://github.com/nodejs/node/pull/64794
+    description: Runtime deprecation.
+-->
+
+Type: Runtime
+
+`net.Server.prototype._listen2` is an undocumented alias for an internal
+function that sets up the listening handle. It is kept only so that code
+replacing it keeps being called by [`server.listen()`][], and it will be
+removed in a future version of Node.js. Use [`server.listen()`][] instead of
+calling or overriding `_listen2`.
+
+### DEP0209: Using `AbortSignal` to dispose of resources
+
+<!-- YAML
+changes:
+  - version: v26.8.2
+    pr-url: https://github.com/nodejs/node/pull/64342
+    description: Documentation-only deprecation.
+-->
+
+Type: Documentation-only
+
+Using `AbortSignal` to destroy long-lived resources is deprecated. Prefer
+`using` for resource cleanup.
+
+`AbortSignal` is still a good fit for canceling actions, propagating
+cancellation from the outside, and timeouts.
+
+```js
+// Deprecated
+async function example() {
+  const ac = new AbortController();
+  const server = http.createServer(handler);
+  server.listen({ port: 3000, signal: ac.signal });
+
+  await doWork();
+  ac.abort();
+}
+```
+
+```js
+// Use this instead
+async function example() {
+  await using server = http.createServer(handler);
+  server.listen(3000);
+
+  await doWork();
+}
+```
+
+```js
+// Deprecated
+async function example() {
+  const ac = new AbortController();
+  const stream = addAbortSignal(ac.signal, fs.createReadStream(file));
+
+  await consume(stream);
+  ac.abort();
+}
+```
+
+```js
+// Use this instead
+async function example() {
+  await using stream = fs.createReadStream(file);
+
+  await consume(stream);
+}
+```
+
+```js
+// Deprecated
+async function example() {
+  const ac = new AbortController();
+  const child = spawn(command, args, { signal: ac.signal });
+
+  await doWork();
+  ac.abort();
+}
+```
+
+```js
+// Use this instead
+async function example() {
+  using child = spawn(command, args);
+
+  await doWork();
+}
+```
+
+### DEP0210: `sqlite.DatabaseSync`
+
+<!-- YAML
+changes:
+  - version: REPLACEME
+    pr-url: https://github.com/nodejs/node/pull/65988
+    description: Documentation-only deprecation.
+-->
+
+Type: Documentation-only
+
+`node:sqlite`'s `DatabaseSync` class was renamed to `Database`. `DatabaseSync`
+is kept as a deprecated alias. Use `Database` instead.
+
+### DEP0211: `sqlite.StatementSync`
+
+<!-- YAML
+changes:
+  - version: REPLACEME
+    pr-url: https://github.com/nodejs/node/pull/65988
+    description: Documentation-only deprecation.
+-->
+
+Type: Documentation-only
+
+`node:sqlite`'s `StatementSync` class was renamed to `Statement`.
+`StatementSync` is kept as a deprecated alias. Use `Statement` instead.
+
 [DEP0142]: #dep0142-repl_builtinlibs
 [DEP0156]: #dep0156-aborted-property-and-abort-aborted-event-in-http
 [NIST SP 800-38D]: https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf
@@ -4707,7 +4842,7 @@ successfully before the response closed.
 [`--pending-deprecation`]: cli.md#--pending-deprecation
 [`--throw-deprecation`]: cli.md#--throw-deprecation
 [`--unhandled-rejections`]: cli.md#--unhandled-rejectionsmode
-[`Buffer.allocUnsafeSlow(size)`]: buffer.md#static-method-bufferallocunsafeslowsize
+[`Buffer.allocUnsafeSlow(size)`]: buffer.md#static-method-bufferallocunsafeslowsize-alignment
 [`Buffer.from(array)`]: buffer.md#static-method-bufferfromarray
 [`Buffer.from(buffer)`]: buffer.md#static-method-bufferfrombuffer
 [`Buffer.isBuffer()`]: buffer.md#static-method-bufferisbufferobj
@@ -4811,6 +4946,7 @@ successfully before the response closed.
 [`response.writableEnded`]: http.md#responsewritableended
 [`response.writableFinished`]: http.md#responsewritablefinished
 [`script.createCachedData()`]: vm.md#scriptcreatecacheddata
+[`server.listen()`]: net.md#serverlisten
 [`setInterval()`]: timers.md#setintervalcallback-delay-args
 [`setTimeout()`]: timers.md#settimeoutcallback-delay-args
 [`socket.bufferSize`]: net.md#socketbuffersize
@@ -4841,7 +4977,7 @@ successfully before the response closed.
 [`writable.writableLength`]: stream.md#writablewritablelength
 [`zlib.bytesWritten`]: zlib.md#zlibbyteswritten
 [alloc]: buffer.md#static-method-bufferallocsize-fill-encoding
-[alloc_unsafe_size]: buffer.md#static-method-bufferallocunsafesize
+[alloc_unsafe_size]: buffer.md#static-method-bufferallocunsafesize-alignment
 [caveats of asynchronous customization hooks]: module.md#caveats-of-asynchronous-customization-hooks
 [from_arraybuffer]: buffer.md#static-method-bufferfromarraybuffer-byteoffset-length
 [from_string_encoding]: buffer.md#static-method-bufferfromstring-encoding

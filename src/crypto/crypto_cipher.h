@@ -43,6 +43,7 @@ class CipherBase : public BaseObject {
     kAuthTagComputed,
   };
   static const unsigned kNoAuthTagLength = static_cast<unsigned>(-1);
+  static constexpr unsigned int kMaxSivAADComponents = 126;
 
   void CommonInit(const char* cipher_type,
                   const ncrypto::Cipher& cipher,
@@ -50,11 +51,15 @@ class CipherBase : public BaseObject {
                   int key_len,
                   const unsigned char* iv,
                   int iv_len,
-                  unsigned int auth_tag_len);
+                  unsigned int auth_tag_len,
+                  const char* cts_mode,
+                  const char* xts_standard);
   void InitIv(const char* cipher_type,
               const ByteSource& key_buf,
               const ArrayBufferOrViewContents<unsigned char>& iv_buf,
-              unsigned int auth_tag_len);
+              unsigned int auth_tag_len,
+              const char* cts_mode,
+              const char* xts_standard);
   bool InitAuthenticated(const char* cipher_type,
                          int iv_len,
                          unsigned int auth_tag_len);
@@ -86,6 +91,8 @@ class CipherBase : public BaseObject {
   unsigned int auth_tag_len_;
   char auth_tag_[ncrypto::Cipher::MAX_AUTH_TAG_LENGTH];
   bool pending_auth_failed_;
+  bool has_one_shot_update_;
+  unsigned int siv_aad_components_;
   int max_message_size_;
 };
 
@@ -106,6 +113,7 @@ class PublicKeyCipher {
                      const ncrypto::EVPKeyPointer& pkey,
                      int padding,
                      const ncrypto::Digest& digest,
+                     const ncrypto::Digest& mgf1_digest,
                      const ArrayBufferOrViewContents<unsigned char>& oaep_label,
                      const ArrayBufferOrViewContents<unsigned char>& data,
                      std::unique_ptr<v8::BackingStore>* out);
@@ -211,6 +219,7 @@ class CipherJob final : public CryptoJob<CipherTraits> {
   WebCryptoCipherMode cipher_mode() const { return cipher_mode_; }
 
   void DoThreadPoolWork() override {
+    ncrypto::ClearErrorOnReturn clear_error_on_return;
     const WebCryptoCipherStatus status =
         CipherTraits::DoCipher(
             AsyncWrap::env(),
@@ -245,11 +254,7 @@ class CipherJob final : public CryptoJob<CipherTraits> {
     Environment* env = AsyncWrap::env();
     CryptoErrorStore* errors = CryptoJob<CipherTraits>::errors();
 
-    if (errors->Empty())
-      errors->Capture();
-
-    if (out_.size() > 0 || errors->Empty()) {
-      CHECK(errors->Empty());
+    if (errors->Empty()) {
       *err = v8::Undefined(env->isolate());
       *result = out_.ToArrayBuffer(env);
       if (result->IsEmpty()) {

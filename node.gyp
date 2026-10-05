@@ -15,10 +15,12 @@
     'node_lib_target_name%': 'libnode',
     'node_module_version%': '',
     'node_no_browser_globals%': 'false',
+    'node_shared_abseil%': 'false',
     'node_shared_brotli%': 'false',
     'node_shared_cares%': 'false',
     'node_shared_gtest%': 'false',
     'node_shared_hdr_histogram%': 'false',
+    'node_shared_highway%': 'false',
     'node_shared_http_parser%': 'false',
     'node_shared_libuv%': 'false',
     'node_shared_lief%': 'false',
@@ -26,6 +28,7 @@
     'node_shared_nbytes%': 'false',
     'node_shared_nghttp2%': 'false',
     'node_shared_openssl%': 'false',
+    'node_shared_perfetto%': 'false',
     'node_shared_sqlite%': 'false',
     'node_shared_ffi%': 'false',
     'node_shared_temporal_capi%': 'false',
@@ -73,7 +76,6 @@
       'deps/v8/tools/tickprocessor-driver.mjs',
       'deps/acorn/acorn/dist/acorn.js',
       'deps/acorn/acorn-walk/dist/walk.js',
-      'deps/minimatch/index.js',
       '<@(node_builtin_shareable_builtins)',
     ],
     'node_sources': [
@@ -100,6 +102,12 @@
       'src/encoding_binding.cc',
       'src/env.cc',
       'src/fs_event_wrap.cc',
+      'src/glob/glob_matcher.cc',
+      'src/glob/glob_unicode.cc',
+      'src/glob/glob_walker.cc',
+      'src/glob/node_glob.cc',
+      'src/glob/glob_parser.cc',
+      'src/glob/glob_program.cc',
       'src/handle_wrap.cc',
       'src/heap_utils.cc',
       'src/histogram.cc',
@@ -178,15 +186,9 @@
       'src/node_worker.cc',
       'src/node_zlib.cc',
       'src/path.cc',
-      'src/permission/child_process_permission.cc',
-      'src/permission/ffi_permission.cc',
+      'src/permission/env_permission.cc',
       'src/permission/fs_permission.cc',
-      'src/permission/inspector_permission.cc',
       'src/permission/permission.cc',
-      'src/permission/wasi_permission.cc',
-      'src/permission/worker_permission.cc',
-      'src/permission/net_permission.cc',
-      'src/permission/addon_permission.cc',
       'src/pipe_wrap.cc',
       'src/process_wrap.cc',
       'src/signal_wrap.cc',
@@ -242,8 +244,6 @@
       'src/histogram-inl.h',
       'src/js_stream.h',
       'src/json_utils.h',
-      'src/large_pages/node_large_page.cc',
-      'src/large_pages/node_large_page.h',
       'src/memory_tracker.h',
       'src/memory_tracker-inl.h',
       'src/module_wrap.h',
@@ -254,6 +254,7 @@
       'src/node_blob.h',
       'src/node_buffer.h',
       'src/node_builtins.h',
+      'src/node_concepts.h',
       'src/node_config_file.h',
       'src/node_constants.h',
       'src/node_context_data.h',
@@ -264,6 +265,13 @@
       'src/node_errors.h',
       'src/node_exit_code.h',
       'src/node_external_reference.h',
+      'src/glob/glob_ast.h',
+      'src/glob/glob_matcher.h',
+      'src/glob/glob_parser.h',
+      'src/glob/glob_program.h',
+      'src/glob/glob_unicode.h',
+      'src/glob/glob_walker.h',
+      'src/glob/node_glob.h',
       'src/node_file.h',
       'src/node_file-inl.h',
       'src/node_http_common.h',
@@ -313,15 +321,11 @@
       'src/node_watchdog.h',
       'src/node_worker.h',
       'src/path.h',
-      'src/permission/child_process_permission.h',
-      'src/permission/ffi_permission.h',
+      'src/permission/boolean_permission.h',
+      'src/permission/env_permission.h',
       'src/permission/fs_permission.h',
-      'src/permission/inspector_permission.h',
       'src/permission/permission.h',
-      'src/permission/wasi_permission.h',
-      'src/permission/worker_permission.h',
-      'src/permission/net_permission.h',
-      'src/permission/addon_permission.h',
+      'src/permission/permission_base.h',
       'src/pipe_wrap.h',
       'src/req_wrap.h',
       'src/req_wrap-inl.h',
@@ -404,47 +408,50 @@
       'src/crypto/crypto_sig.cc',
       'src/crypto/crypto_timing.cc',
       'src/crypto/crypto_cipher.cc',
+      'src/crypto/crypto_client_hello.cc',
       'src/crypto/crypto_context.cc',
+      'src/crypto/crypto_tls_certificates.cc',
       'src/crypto/crypto_ec.cc',
-      'src/crypto/crypto_pqc.cc',
       'src/crypto/crypto_kem.cc',
       'src/crypto/crypto_hmac.cc',
       'src/crypto/crypto_kmac.cc',
+      'src/crypto/crypto_mac.cc',
       'src/crypto/crypto_turboshake.cc',
       'src/crypto/crypto_random.cc',
       'src/crypto/crypto_rsa.cc',
       'src/crypto/crypto_spkac.cc',
       'src/crypto/crypto_util.cc',
-      'src/crypto/crypto_clienthello.cc',
       'src/crypto/crypto_dh.cc',
       'src/crypto/crypto_hash.cc',
       'src/crypto/crypto_keys.cc',
       'src/crypto/crypto_keygen.cc',
+      'src/crypto/crypto_pkcs12.cc',
       'src/crypto/crypto_scrypt.cc',
       'src/crypto/crypto_tls.cc',
       'src/crypto/crypto_x509.cc',
       'src/crypto/crypto_argon2.h',
       'src/crypto/crypto_bio.h',
-      'src/crypto/crypto_clienthello-inl.h',
       'src/crypto/crypto_dh.h',
       'src/crypto/crypto_hmac.h',
       'src/crypto/crypto_kmac.h',
+      'src/crypto/crypto_mac.h',
       'src/crypto/crypto_turboshake.h',
       'src/crypto/crypto_rsa.h',
       'src/crypto/crypto_spkac.h',
       'src/crypto/crypto_util.h',
       'src/crypto/crypto_cipher.h',
+      'src/crypto/crypto_client_hello.h',
       'src/crypto/crypto_common.h',
       'src/crypto/crypto_dsa.h',
       'src/crypto/crypto_hash.h',
       'src/crypto/crypto_keys.h',
       'src/crypto/crypto_keygen.h',
+      'src/crypto/crypto_pkcs12.h',
       'src/crypto/crypto_scrypt.h',
       'src/crypto/crypto_tls.h',
-      'src/crypto/crypto_clienthello.h',
       'src/crypto/crypto_context.h',
+      'src/crypto/crypto_tls_certificates.h',
       'src/crypto/crypto_ec.h',
-      'src/crypto/crypto_pqc.h',
       'src/crypto/crypto_hkdf.h',
       'src/crypto/crypto_pbkdf2.h',
       'src/crypto/crypto_sig.h',
@@ -471,7 +478,6 @@
       'src/tracing/trace_event_legacy.h',
     ],
     'node_cctest_openssl_sources': [
-      'test/cctest/test_crypto_clienthello.cc',
       'test/cctest/test_node_crypto.cc',
       'test/cctest/test_node_crypto_env.cc',
     ],
@@ -516,11 +522,6 @@
     'node_mksnapshot_exec': '<(PRODUCT_DIR)/<(EXECUTABLE_PREFIX)node_mksnapshot<(EXECUTABLE_SUFFIX)',
     'node_js2c_exec': '<(PRODUCT_DIR)/<(EXECUTABLE_PREFIX)node_js2c<(EXECUTABLE_SUFFIX)',
     'conditions': [
-      ['GENERATOR == "ninja"', {
-        'node_text_start_object_path': 'src/large_pages/node_text_start.node_text_start.o'
-      }, {
-        'node_text_start_object_path': 'node_text_start/src/large_pages/node_text_start.o'
-      }],
       [ 'node_shared=="true"', {
         'node_target_type%': 'shared_library',
         'node_lib_type': 'shared_library',
@@ -598,19 +599,6 @@
   },
 
   'targets': [
-    {
-      'target_name': 'node_text_start',
-      'type': 'none',
-      'conditions': [
-        [ 'OS in "linux freebsd solaris openharmony" and '
-          'target_arch=="x64"', {
-          'type': 'static_library',
-          'sources': [
-            'src/large_pages/node_text_start.S'
-          ]
-        }],
-      ]
-    },
     {
       'target_name': '<(node_core_target_name)',
       'type': 'executable',
@@ -782,14 +770,6 @@
             },
           },
         }],
-        [ 'OS in "linux freebsd openharmony" and '
-          'target_arch=="x64"', {
-          'dependencies': [ 'node_text_start' ],
-          'ldflags+': [
-            '<(obj_dir)/<(node_text_start_object_path)'
-          ]
-        }],
-
         ['node_fipsinstall=="true"', {
           'variables': {
             'openssl-cli': '<(PRODUCT_DIR)/<(EXECUTABLE_PREFIX)openssl-cli<(EXECUTABLE_SUFFIX)',
@@ -938,7 +918,7 @@
         [ 'node_builtin_modules_path!=""', {
           'defines': [ 'NODE_BUILTIN_MODULES_PATH="<(node_builtin_modules_path)"' ],
         }],
-        [ 'node_use_bundled_v8!="false"', {
+        [ 'node_use_bundled_v8!="false" and node_shared_abseil=="false"', {
           'dependencies': [ 'tools/v8_gypfiles/abseil.gyp:abseil' ],
         }],
         [ 'node_shared_gtest=="false"', {
@@ -977,8 +957,12 @@
           'sources': [
             '<@(node_tracing_perfetto_sources)',
           ],
-          'dependencies': [
-            'deps/perfetto/perfetto.gyp:perfetto_sdk',
+          'conditions': [
+            ['node_shared_perfetto=="false"', {
+              'dependencies': [
+                'deps/perfetto/perfetto.gyp:perfetto_sdk',
+              ],
+            }],
           ],
         }, {
           'sources': [
@@ -1026,11 +1010,6 @@
             'HAVE_DTLS=1',
           ],
         }],
-        [ 'OS in "linux freebsd mac solaris openharmony" and '
-          'target_arch=="x64" and '
-          'node_target_type=="executable"', {
-          'defines': [ 'NODE_ENABLE_LARGE_CODE_PAGES=1' ],
-        }],
         [ 'use_openssl_def==1', {
           # TODO(bnoordhuis) Make all platforms export the same list of symbols.
           # Teach mkssldef.py to generate linker maps that UNIX linkers understand.
@@ -1053,7 +1032,7 @@
             ],
           },
           'conditions': [
-            ['openssl_is_fips!=""', {
+            ['openssl_is_fips=="true"', {
               'variables': { 'mkssldef_flags': ['-DOPENSSL_FIPS'] },
             }],
           ],
@@ -1260,6 +1239,11 @@
           'sources': [
             'src/res/node.rc',
           ],
+          'libraries': [
+            'Dbghelp.lib',
+            'winmm.lib',
+            'Ws2_32.lib',
+          ],
         }],
       ],
     }, # node_lib_target_name
@@ -1309,54 +1293,6 @@
         }],
       ],
     }, # fuzz_env
-    { # fuzz_ClientHelloParser.cc
-      'target_name': 'fuzz_ClientHelloParser',
-      'type': 'executable',
-      'dependencies': [
-        '<(node_lib_target_name)',
-      ],
-      'includes': [
-        'node.gypi'
-      ],
-      'include_dirs': [
-        'src',
-        'tools/msvs/genfiles',
-        'deps/v8/include',
-        'deps/cares/include',
-        'deps/uv/include',
-        'test/cctest',
-      ],
-      'defines': [
-        'NODE_ARCH="<(target_arch)"',
-        'NODE_PLATFORM="<(OS)"',
-        'NODE_WANT_INTERNALS=1',
-      ],
-      'sources': [
-        'test/fuzzers/fuzz_ClientHelloParser.cc',
-      ],
-      'conditions': [
-        [ 'node_shared_hdr_histogram=="false"', {
-          'dependencies': [
-            'deps/histogram/histogram.gyp:histogram',
-          ],
-        }],
-        [ 'node_shared_uvwasi=="false"', {
-          'dependencies': [ 'deps/uvwasi/uvwasi.gyp:uvwasi' ],
-          'include_dirs': [ 'deps/uvwasi/include' ],
-        }],
-        ['OS=="linux" or OS=="openharmony"', {
-          'ldflags': [ '-fsanitize=fuzzer' ]
-        }],
-        # Ensure that ossfuzz flag has been set and that we are on Linux
-        [ 'OS not in "linux openharmony" or ossfuzz!="true"', {
-          'type': 'none',
-        }],
-        # Avoid excessive LTO
-        ['enable_lto=="true"', {
-          'ldflags': [ '-fno-lto' ],
-        }],
-      ],
-    }, # fuzz_ClientHelloParser.cc
     { # fuzz_strings
       'target_name': 'fuzz_strings',
       'type': 'executable',
@@ -1454,7 +1390,7 @@
         [ 'node_shared_gtest=="true"', {
           'libraries': [ '-lgtest_main' ],
         }],
-        [ 'node_use_bundled_v8!="false"', {
+        [ 'node_use_bundled_v8!="false" and node_shared_abseil=="false"', {
           'dependencies': [ 'tools/v8_gypfiles/abseil.gyp:abseil' ],
         }],
         [ 'node_shared_hdr_histogram=="false"', {
@@ -1477,14 +1413,10 @@
         }, {
           'sources!': [ '<@(node_cctest_openssl_sources)' ],
         }],
-        [ 'node_use_quic=="true"', {
-          'defines': [
-            'HAVE_QUIC=1',
-          ],
-        }, {
+        [ 'node_use_quic!="true"', {
           'sources!': [ '<@(node_cctest_quic_sources)' ],
         }],
-        [ 'v8_use_perfetto==1', {
+        [ 'v8_use_perfetto==1 and node_shared_perfetto=="false"', {
           'dependencies': [
             'deps/perfetto/perfetto.gyp:perfetto_sdk',
           ],
@@ -1730,7 +1662,7 @@
           'libraries': [ '-framework CoreFoundation -framework Security' ],
         }],
         [ 'node_shared_simdutf=="false" and node_use_bundled_v8!="false"', {
-          'dependencies': [ 'tools/v8_gypfiles/v8.gyp:simdutf#host' ],
+          'dependencies': [ 'tools/v8_gypfiles/simdutf.gyp:simdutf#host' ],
         }],
         [ 'node_shared_libuv=="false"', {
           'dependencies': [ 'deps/uv/uv.gyp:libuv#host' ],
@@ -1772,6 +1704,10 @@
 
       'defines': [ 'NODE_WANT_INTERNALS=1' ],
 
+      # node_mksnapshot statically links node_base; it must not use the
+      # dllimport path meant for executables that load the libnode DLL.
+      'defines!': [ 'BUILDING_NODE_EXTENSION' ],
+
       'sources': [
         'src/node_snapshot_stub.cc',
         'tools/snapshot/node_mksnapshot.cc',
@@ -1810,7 +1746,7 @@
             'NODE_USE_NODE_CODE_CACHE=1',
           ],
         }],
-        [ 'v8_use_perfetto==1', {
+        [ 'v8_use_perfetto==1 and node_shared_perfetto=="false"', {
           'dependencies': [
             'deps/perfetto/perfetto.gyp:perfetto_sdk',
           ],
@@ -1854,12 +1790,26 @@
          'sources': [
            'tools/gen_node_def.cc'
          ],
+         'conditions': [
+           # When cross-compiling, build this tool for the host so it can
+           # run during the build. The MSVS generator expects it to be
+           # named gen_node_def_host.exe in that case.
+           ['want_separate_host_toolset', {
+             'toolsets': ['host'],
+           }],
+         ],
        },
        {
          'target_name': 'generate_node_def',
          'dependencies': [
-           'gen_node_def',
            '<(node_lib_target_name)',
+         ],
+         'conditions': [
+           ['want_separate_host_toolset', {
+             'dependencies': ['gen_node_def#host'],
+           }, {
+             'dependencies': ['gen_node_def'],
+           }],
          ],
          'type': 'none',
          'actions': [

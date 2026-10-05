@@ -161,6 +161,9 @@
     'v8_enable_pointer_compression_shared_cage%': 0,
     'v8_enable_31bit_smis_on_64bit_arch%': 0,
 
+    # Size of the contiguous read-only space reservation in the shared cage.
+    'v8_contiguous_compressed_ro_space_size_mb%': 16,
+
     # Sets -dV8_SHORT_BUILTIN_CALLS
     'v8_enable_short_builtin_calls%': 0,
 
@@ -300,6 +303,11 @@
     # Enable Temporal API. Enabling this feature will
     # add a dependency on the temporal_rs library.
     'v8_enable_temporal_support%': 0,
+    # Enable Temporal even with system-icu.
+    # This will use an improved codepath which does not
+    # depend on internal ICU headers.
+    # This option can be on unconditionally.
+    'v8_enable_temporal_systemicu%': 1,
 
     # Lite mode disables a number of performance optimizations to reduce memory
     # at the cost of performance.
@@ -365,7 +373,11 @@
         'defines': ['V8_COMPRESS_POINTERS_IN_MULTIPLE_CAGES'],
       }],
       ['v8_enable_pointer_compression_shared_cage==1', {
-        'defines': ['V8_COMPRESS_POINTERS_IN_SHARED_CAGE'],
+        'defines': [
+          'V8_COMPRESS_POINTERS_IN_SHARED_CAGE',
+          'V8_CONTIGUOUS_COMPRESSED_RO_SPACE',
+          'V8_CONTIGUOUS_COMPRESSED_RO_SPACE_SIZE_MB=<(v8_contiguous_compressed_ro_space_size_mb)',
+        ],
       }],
       ['v8_enable_pointer_compression==1 or v8_enable_31bit_smis_on_64bit_arch==1', {
         'defines': ['V8_31BIT_SMIS_ON_64BIT_ARCH',],
@@ -419,6 +431,9 @@
       ['v8_enable_temporal_support==1', {
         'defines': ['V8_TEMPORAL_SUPPORT',],
       }],
+       ['v8_enable_temporal_systemicu==1', {
+        'defines': ['V8_ENABLE_TEMPORAL_SYSTEMICU',],
+      }],
       # Refs: https://github.com/nodejs/node/pull/23801
       # ['v8_enable_handle_zapping==1', {
       #  'defines': ['ENABLE_HANDLE_ZAPPING',],
@@ -454,9 +469,21 @@
         'defines': ['V8_ENABLE_SEEDED_ARRAY_INDEX_HASH',],
       }],
       ['dcheck_always_on!=0', {
-        'defines': ['DEBUG',],
+        'defines': [
+          'DEBUG',
+          'V8_LOGGING_LEVEL=2',  # Print file, line, message on fatal checks
+        ],
       }, {
         'defines': ['NDEBUG',],
+        'configurations': {
+          'Debug': {
+            'defines': ['V8_LOGGING_LEVEL=2',],
+          },
+          'Release': {
+            # Only log message (without file or line) on fatal checks
+            'defines': ['V8_LOGGING_LEVEL=1',],
+          },
+        },
       }],
       ['v8_enable_verify_csa==1', {
         'defines': ['ENABLE_VERIFY_CSA',],

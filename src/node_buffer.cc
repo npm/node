@@ -88,7 +88,7 @@ namespace {
 
 class CallbackInfo : public Cleanable {
  public:
-  static inline Local<ArrayBuffer> CreateTrackedArrayBuffer(
+  static inline MaybeLocal<ArrayBuffer> CreateTrackedArrayBuffer(
       Environment* env,
       char* data,
       size_t length,
@@ -114,7 +114,7 @@ class CallbackInfo : public Cleanable {
   Environment* const env_;
 };
 
-Local<ArrayBuffer> CallbackInfo::CreateTrackedArrayBuffer(
+MaybeLocal<ArrayBuffer> CallbackInfo::CreateTrackedArrayBuffer(
     Environment* env,
     char* data,
     size_t length,
@@ -124,10 +124,18 @@ Local<ArrayBuffer> CallbackInfo::CreateTrackedArrayBuffer(
   CHECK_IMPLIES(data == nullptr, length == 0);
 
   CallbackInfo* self = new CallbackInfo(env, callback, data, hint);
-  std::unique_ptr<BackingStore> bs =
-      ArrayBuffer::NewBackingStore(data, length, [](void*, size_t, void* arg) {
+  std::unique_ptr<BackingStore> bs = AdoptIntoBackingStore(
+      env->isolate(),
+      data,
+      length,
+      [](void*, size_t, void* arg) {
         static_cast<CallbackInfo*>(arg)->OnBackingStoreFree();
-      }, self);
+      },
+      self);
+  if (!bs) {
+    THROW_ERR_MEMORY_ALLOCATION_FAILED(env);
+    return MaybeLocal<ArrayBuffer>();
+  }
   Local<ArrayBuffer> ab = ArrayBuffer::New(env->isolate(), std::move(bs));
 
   // V8 simply ignores the BackingStore deleter callback if data == nullptr,
@@ -135,7 +143,7 @@ Local<ArrayBuffer> CallbackInfo::CreateTrackedArrayBuffer(
   if (data == nullptr) {
     ab->Detach(Local<Value>()).Check();
     self->OnBackingStoreFree();  // This calls `callback` asynchronously.
-  } else {
+  } else if (ab->Data() == data) {
     // Store the ArrayBuffer so that we can detach it later.
     self->persistent_.Reset(env->isolate(), ab);
     self->persistent_.SetWeak();
@@ -143,7 +151,6 @@ Local<ArrayBuffer> CallbackInfo::CreateTrackedArrayBuffer(
 
   return ab;
 }
-
 
 CallbackInfo::CallbackInfo(Environment* env,
                            FreeCallback callback,
@@ -481,11 +488,13 @@ MaybeLocal<Object> New(Environment* env,
     return Local<Object>();
   }
 
-  Local<ArrayBuffer> ab =
-      CallbackInfo::CreateTrackedArrayBuffer(env, data, length, callback, hint);
-  if (ab->SetPrivate(env->context(),
+  Local<ArrayBuffer> ab;
+  if (!CallbackInfo::CreateTrackedArrayBuffer(env, data, length, callback, hint)
+           .ToLocal(&ab) ||
+      ab->SetPrivate(env->context(),
                      env->untransferable_object_private_symbol(),
-                     True(env->isolate())).IsNothing()) {
+                     True(env->isolate()))
+          .IsNothing()) {
     return Local<Object>();
   }
   MaybeLocal<Uint8Array> maybe_ui = Buffer::New(env, ab, 0, length);
@@ -529,32 +538,24 @@ MaybeLocal<Object> New(Environment* env,
     }
   }
 
-#if defined(V8_ENABLE_SANDBOX)
-  // When v8 sandbox is enabled, external backing stores are not supported
-  // since all arraybuffer allocations are expected to be done by the isolate.
-  // Since this violates the contract of this function, let's free the data and
-  // throw an error.
-  free(data);
-  THROW_ERR_OPERATION_FAILED(
-      env->isolate(),
-      "Wrapping external data is not supported when the v8 sandbox is enabled");
-  return MaybeLocal<Object>();
-#else
   EscapableHandleScope handle_scope(env->isolate());
 
-  auto free_callback = [](void* data, size_t length, void* deleter_data) {
-    free(data);
-  };
-  std::unique_ptr<BackingStore> bs =
-      ArrayBuffer::NewBackingStore(data, length, free_callback, nullptr);
-
+  std::unique_ptr<BackingStore> bs = AdoptIntoBackingStore(
+      env->isolate(),
+      data,
+      length,
+      [](void* data, size_t, void*) { free(data); },
+      nullptr);
+  if (!bs) {
+    THROW_ERR_MEMORY_ALLOCATION_FAILED(env);
+    return MaybeLocal<Object>();
+  }
   Local<ArrayBuffer> ab = ArrayBuffer::New(env->isolate(), std::move(bs));
 
   Local<Object> obj;
   if (Buffer::New(env, ab, 0, length).ToLocal(&obj))
     return handle_scope.Escape(obj);
   return Local<Object>();
-#endif
 }
 
 namespace {
@@ -1085,6 +1086,10 @@ void IndexOfString(const FunctionCallbackInfo<Value>& args) {
   } else if (is_forward && offset >= search_end) {
     return args.GetReturnValue().Set(-1);
   }
+  if (enc == UCS2 && is_forward) {
+    offset += offset % sizeof(uint16_t);
+    if (offset >= search_end) return args.GetReturnValue().Set(-1);
+  }
   CHECK_LT(offset, haystack_length);
   if ((is_forward && needle_length + offset > search_end) ||
       needle_length > search_end) {
@@ -1152,8 +1157,8 @@ void IndexOfString(const FunctionCallbackInfo<Value>& args) {
                                   is_forward);
   }
 
-  args.GetReturnValue().Set(result >= search_end ? -1
-                                                 : static_cast<int>(result));
+  args.GetReturnValue().Set(
+      result >= search_end ? -1 : static_cast<int64_t>(result));
 }
 
 void IndexOfBuffer(const FunctionCallbackInfo<Value>& args) {
@@ -1240,11 +1245,11 @@ void IndexOfBuffer(const FunctionCallbackInfo<Value>& args) {
                                   is_forward);
   }
 
-  args.GetReturnValue().Set(result >= search_end ? -1
-                                                 : static_cast<int>(result));
+  args.GetReturnValue().Set(
+      result >= search_end ? -1 : static_cast<int64_t>(result));
 }
 
-int32_t IndexOfNumberImpl(Local<Value> buffer_obj,
+int64_t IndexOfNumberImpl(Local<Value> buffer_obj,
                           const uint32_t needle,
                           const int64_t offset_i64,
                           const int64_t end_i64,
@@ -1271,7 +1276,7 @@ int32_t IndexOfNumberImpl(Local<Value> buffer_obj,
     ptr = nbytes::stringsearch::MemrchrFill(buffer_data, needle, backward_end);
   }
   const uint8_t* ptr_uint8 = static_cast<const uint8_t*>(ptr);
-  return ptr != nullptr ? static_cast<int32_t>(ptr_uint8 - buffer_data) : -1;
+  return ptr != nullptr ? static_cast<int64_t>(ptr_uint8 - buffer_data) : -1;
 }
 
 void SlowIndexOfNumber(const FunctionCallbackInfo<Value>& args) {
@@ -1292,7 +1297,7 @@ void SlowIndexOfNumber(const FunctionCallbackInfo<Value>& args) {
       IndexOfNumberImpl(buffer_obj, needle, offset_i64, end_i64, is_forward));
 }
 
-int32_t FastIndexOfNumber(Local<Value>,
+int64_t FastIndexOfNumber(Local<Value>,
                           Local<Value> buffer_obj,
                           uint32_t needle,
                           int64_t offset_i64,
@@ -1360,31 +1365,17 @@ void FastSwap64(Local<Value> receiver,
 
 static CFunction fast_swap64(CFunction::Make(FastSwap64));
 
-struct ValidationResult {
-  bool is_valid;
-  bool was_detached;
-};
-
-static ValidationResult ValidateUtf8(Local<Value> value) {
+static bool ValidateUtf8(Local<Value> value) {
   ArrayBufferViewContents<char> abv(value);
-  bool was_detached = abv.WasDetached();
-  return {!was_detached && simdutf::validate_utf8(abv.data(), abv.length()),
-          was_detached};
+  return abv.length() == 0 || simdutf::validate_utf8(abv.data(), abv.length());
 }
 
 static void IsUtf8(const FunctionCallbackInfo<Value>& args) {
-  Environment* env = Environment::GetCurrent(args);
   CHECK_EQ(args.Length(), 1);
   CHECK(args[0]->IsTypedArray() || args[0]->IsArrayBuffer() ||
         args[0]->IsSharedArrayBuffer());
 
-  const ValidationResult result = ValidateUtf8(args[0]);
-  if (result.was_detached) {
-    return node::THROW_ERR_INVALID_STATE(
-        env, "Cannot validate on a detached buffer");
-  }
-
-  args.GetReturnValue().Set(result.is_valid);
+  args.GetReturnValue().Set(ValidateUtf8(args[0]));
 }
 
 static bool FastIsUtf8(Local<Value> receiver,
@@ -1393,40 +1384,23 @@ static bool FastIsUtf8(Local<Value> receiver,
                        FastApiCallbackOptions& options) {
   TRACK_V8_FAST_API_CALL("buffer.isUtf8");
   HandleScope scope(options.isolate);
-
-  const ValidationResult result = ValidateUtf8(value);
-  if (result.was_detached) {
-    node::THROW_ERR_INVALID_STATE(options.isolate,
-                                  "Cannot validate on a detached buffer");
-    return false;
-  }
-  return result.is_valid;
+  return ValidateUtf8(value);
 }
 
 static CFunction fast_is_utf8(CFunction::Make(FastIsUtf8));
 
-static ValidationResult ValidateAscii(Local<Value> value) {
+static bool ValidateAscii(Local<Value> value) {
   ArrayBufferViewContents<char> abv(value);
-  bool was_detached = abv.WasDetached();
-  return {
-      !was_detached &&
-          !simdutf::validate_ascii_with_errors(abv.data(), abv.length()).error,
-      was_detached};
+  return abv.length() == 0 ||
+         !simdutf::validate_ascii_with_errors(abv.data(), abv.length()).error;
 }
 
 static void IsAscii(const FunctionCallbackInfo<Value>& args) {
-  Environment* env = Environment::GetCurrent(args);
   CHECK_EQ(args.Length(), 1);
   CHECK(args[0]->IsTypedArray() || args[0]->IsArrayBuffer() ||
         args[0]->IsSharedArrayBuffer());
 
-  const ValidationResult result = ValidateAscii(args[0]);
-  if (result.was_detached) {
-    return node::THROW_ERR_INVALID_STATE(
-        env, "Cannot validate on a detached buffer");
-  }
-
-  args.GetReturnValue().Set(result.is_valid);
+  args.GetReturnValue().Set(ValidateAscii(args[0]));
 }
 
 static bool FastIsAscii(Local<Value> receiver,
@@ -1435,17 +1409,120 @@ static bool FastIsAscii(Local<Value> receiver,
                         FastApiCallbackOptions& options) {
   TRACK_V8_FAST_API_CALL("buffer.isAscii");
   HandleScope scope(options.isolate);
-
-  const ValidationResult result = ValidateAscii(value);
-  if (result.was_detached) {
-    node::THROW_ERR_INVALID_STATE(options.isolate,
-                                  "Cannot validate on a detached buffer");
-    return false;
-  }
-  return result.is_valid;
+  return ValidateAscii(value);
 }
 
 static CFunction fast_is_ascii(CFunction::Make(FastIsAscii));
+
+// Returns true if every UTF-16 code unit of the string is <= 0xFF, i.e. the
+// string can be losslessly encoded using Node.js' 'latin1' encoding (which
+// maps U+0000-U+00FF directly to bytes 0x00-0xFF, unlike the WHATWG
+// 'latin1' label, which is an alias for windows-1252).
+// ContainsOnlyOneByte() is O(1) for strings with a one-byte representation,
+// uses SIMD for flat two-byte strings, and traverses cons strings without
+// flattening (no allocation), which makes it safe to call from a fast API
+// call.
+static void IsLatin1(const FunctionCallbackInfo<Value>& args) {
+  CHECK_EQ(args.Length(), 1);
+  CHECK(args[0]->IsString());
+  args.GetReturnValue().Set(args[0].As<String>()->ContainsOnlyOneByte());
+}
+
+static bool FastIsLatin1(Local<Value> receiver, Local<Value> value) {
+  TRACK_V8_FAST_API_CALL("buffer.isLatin1");
+  CHECK(value->IsString());
+  return value.As<String>()->ContainsOnlyOneByte();
+}
+
+static CFunction fast_is_latin1(CFunction::Make(FastIsLatin1));
+
+// Number of UTF-16 code units produced by decoding [p, end) as UTF-8 with
+// WHATWG "maximal subpart" U+FFFD replacement, matching the fallback that
+// StringBytes::Encode takes for invalid input (v8::String::NewFromUtf8).
+static size_t Utf16LengthFromInvalidUtf8(const uint8_t* p, const uint8_t* end) {
+  size_t units = 0;
+  while (p < end) {
+    const uint8_t lead = *p;
+    if (lead < 0x80) {
+      p++;
+      units++;
+      continue;
+    }
+    size_t len;
+    uint8_t lo = 0x80;
+    uint8_t hi = 0xBF;
+    if (lead >= 0xC2 && lead <= 0xDF) {
+      len = 2;
+    } else if (lead >= 0xE0 && lead <= 0xEF) {
+      len = 3;
+      if (lead == 0xE0) lo = 0xA0;
+      if (lead == 0xED) hi = 0x9F;
+    } else if (lead >= 0xF0 && lead <= 0xF4) {
+      len = 4;
+      if (lead == 0xF0) lo = 0x90;
+      if (lead == 0xF4) hi = 0x8F;
+    } else {
+      // Invalid lead byte: one replacement character.
+      p++;
+      units++;
+      continue;
+    }
+    size_t i = 1;
+    for (; i < len && p + i < end; i++) {
+      const uint8_t c = p[i];
+      if (i == 1 ? (c < lo || c > hi) : (c < 0x80 || c > 0xBF)) break;
+    }
+    if (i == len) {
+      p += len;
+      units += (len == 4) ? 2 : 1;
+    } else {
+      // The lead byte plus the valid continuation bytes seen so far form the
+      // maximal subpart and become one replacement character; the byte that
+      // failed is decoded again on the next iteration.
+      p += i;
+      units++;
+    }
+  }
+  return units;
+}
+
+static double StringLengthUtf8Impl(Local<Value> value) {
+  ArrayBufferViewContents<uint8_t> abv(value);
+  const uint8_t* data = abv.data();
+  const size_t length = abv.length();
+  if (length == 0) return 0;
+  const simdutf::result r = simdutf::validate_utf8_with_errors(
+      reinterpret_cast<const char*>(data), length);
+  if (r.error == simdutf::error_code::SUCCESS) {
+    return static_cast<double>(simdutf::utf16_length_from_utf8(
+        reinterpret_cast<const char*>(data), length));
+  }
+  // r.count is the offset of the first invalid sequence; everything before it
+  // is valid UTF-8.
+  const size_t valid = simdutf::utf16_length_from_utf8(
+      reinterpret_cast<const char*>(data), r.count);
+  return static_cast<double>(
+      valid + Utf16LengthFromInvalidUtf8(data + r.count, data + length));
+}
+
+static void StringLengthUtf8(const FunctionCallbackInfo<Value>& args) {
+  CHECK_EQ(args.Length(), 1);
+  CHECK(args[0]->IsTypedArray() || args[0]->IsArrayBuffer() ||
+        args[0]->IsSharedArrayBuffer());
+
+  args.GetReturnValue().Set(StringLengthUtf8Impl(args[0]));
+}
+
+static double FastStringLengthUtf8(Local<Value> receiver,
+                                   Local<Value> value,
+                                   // NOLINTNEXTLINE(runtime/references)
+                                   FastApiCallbackOptions& options) {
+  TRACK_V8_FAST_API_CALL("buffer.stringLengthUtf8");
+  HandleScope scope(options.isolate);
+  return StringLengthUtf8Impl(value);
+}
+
+static CFunction fast_string_length_utf8(CFunction::Make(FastStringLengthUtf8));
 
 void SetBufferPrototype(const FunctionCallbackInfo<Value>& args) {
   Realm* realm = Realm::GetCurrent(args);
@@ -1646,11 +1723,33 @@ inline size_t CheckNumberToSize(Local<Value> number) {
   // See v8::internal::TryNumberToSize on this (and on < comparison)
   double maxSize = static_cast<double>(std::numeric_limits<size_t>::max());
   CHECK(value >= 0 && value < maxSize);
-  size_t size = static_cast<size_t>(value);
-#ifdef V8_ENABLE_SANDBOX
-  CHECK_LE(size, kMaxSafeBufferSizeForSandbox);
-#endif
-  return size;
+  return static_cast<size_t>(value);
+}
+
+// Allocates an ArrayBuffer of `size` bytes. Its contents are left
+// uninitialized, unless zero-filling is required.
+MaybeLocal<ArrayBuffer> AllocateUnsafeArrayBuffer(Environment* env,
+                                                  size_t size) {
+  Isolate* isolate = env->isolate();
+
+  // 0-length, or zero-fill flag is set, or building snapshot
+  if (size == 0 || per_process::cli_options->zero_fill_all_buffers ||
+      env->isolate_data()->is_building_snapshot()) {
+    return ArrayBuffer::New(isolate, size);
+  }
+
+  std::unique_ptr<BackingStore> store = ArrayBuffer::NewBackingStore(
+      isolate,
+      size,
+      BackingStoreInitializationMode::kUninitialized,
+      v8::BackingStoreOnFailureMode::kReturnNull);
+
+  if (!store) [[unlikely]] {
+    THROW_ERR_MEMORY_ALLOCATION_FAILED(env);
+    return MaybeLocal<ArrayBuffer>();
+  }
+
+  return ArrayBuffer::New(isolate, std::move(store));
 }
 
 void CreateUnsafeArrayBuffer(const FunctionCallbackInfo<Value>& args) {
@@ -1662,30 +1761,49 @@ void CreateUnsafeArrayBuffer(const FunctionCallbackInfo<Value>& args) {
 
   size_t size = CheckNumberToSize(args[0]);
 
-  Isolate* isolate = env->isolate();
-
   Local<ArrayBuffer> buf;
+  if (AllocateUnsafeArrayBuffer(env, size).ToLocal(&buf)) {
+    args.GetReturnValue().Set(buf);
+  }
+}
 
-  // 0-length, or zero-fill flag is set, or building snapshot
-  if (size == 0 || per_process::cli_options->zero_fill_all_buffers ||
-      env->isolate_data()->is_building_snapshot()) {
-    buf = ArrayBuffer::New(isolate, size);
-  } else {
-    std::unique_ptr<BackingStore> store = ArrayBuffer::NewBackingStore(
-        isolate,
-        size,
-        BackingStoreInitializationMode::kUninitialized,
-        v8::BackingStoreOnFailureMode::kReturnNull);
+// arrayBufferAlignedOffset(arrayBuffer, alignment)
+//
+// Returns the offset of the first byte of `arrayBuffer` that is located at a
+// memory address which is a multiple of `alignment`. V8 does not let us choose
+// the address of a backing store, so an aligned view is obtained by
+// over-allocating and skipping to that offset. The backing store of a
+// non-resizable ArrayBuffer never moves, so the offset stays aligned for the
+// lifetime of the ArrayBuffer.
+void ArrayBufferAlignedOffset(const FunctionCallbackInfo<Value>& args) {
+  Environment* env = Environment::GetCurrent(args);
+  CHECK_EQ(args.Length(), 2);
+  CHECK(args[0]->IsArrayBuffer());
+  Local<ArrayBuffer> ab = args[0].As<ArrayBuffer>();
 
-    if (!store) [[unlikely]] {
-      THROW_ERR_MEMORY_ALLOCATION_FAILED(env);
-      return;
-    }
+  size_t alignment = CheckNumberToSize(args[1]);
 
-    buf = ArrayBuffer::New(isolate, std::move(store));
+  // Validated in JS land.
+  CHECK_GT(alignment, 0);
+  CHECK_EQ(alignment & (alignment - 1), 0);
+
+  // A backing store does not keep its address across snapshot serialization, so
+  // an offset computed here would not be aligned after deserialization anyway
+  // -- and worse, baking one in would make the snapshot depend on where this
+  // process happened to allocate, i.e. no longer reproducible. Report no
+  // padding instead. The buffer pool recreates itself in a deserialize
+  // callback, so it is properly aligned once the deserialized process runs.
+  if (env->isolate_data()->is_building_snapshot()) {
+    args.GetReturnValue().Set(0.0);
+    return;
   }
 
-  args.GetReturnValue().Set(buf);
+  uintptr_t start = reinterpret_cast<uintptr_t>(ab->Data());
+  size_t offset = (alignment - (start & (alignment - 1))) & (alignment - 1);
+  CHECK_EQ((start + offset) & (alignment - 1), 0);
+  CHECK_LE(offset, ab->ByteLength());
+
+  args.GetReturnValue().Set(static_cast<double>(offset));
 }
 
 template <encoding encoding>
@@ -1727,6 +1845,11 @@ void SlowWriteString(const FunctionCallbackInfo<Value>& args) {
   size_t max_length = 0;
 
   THROW_AND_RETURN_IF_OOB(ParseArrayIndex(env, args[2], 0, &offset));
+  if (offset > ts_obj_length) {
+    return node::THROW_ERR_BUFFER_OUT_OF_BOUNDS(
+        env, "\"offset\" is outside of buffer bounds");
+  }
+
   THROW_AND_RETURN_IF_OOB(
       ParseArrayIndex(env, args[3], ts_obj_length - offset, &max_length));
 
@@ -1817,6 +1940,8 @@ void Initialize(Local<Object> target,
   SetMethod(context, target, "copyArrayBuffer", CopyArrayBuffer);
   SetMethodNoSideEffect(
       context, target, "createUnsafeArrayBuffer", CreateUnsafeArrayBuffer);
+  SetMethodNoSideEffect(
+      context, target, "arrayBufferAlignedOffset", ArrayBufferAlignedOffset);
 
   SetFastMethod(context, target, "swap16", Swap16, &fast_swap16);
   SetFastMethod(context, target, "swap32", Swap32, &fast_swap32);
@@ -1825,6 +1950,13 @@ void Initialize(Local<Object> target,
   SetFastMethodNoSideEffect(context, target, "isUtf8", IsUtf8, &fast_is_utf8);
   SetFastMethodNoSideEffect(
       context, target, "isAscii", IsAscii, &fast_is_ascii);
+  SetFastMethodNoSideEffect(
+      context, target, "isLatin1", IsLatin1, &fast_is_latin1);
+  SetFastMethodNoSideEffect(context,
+                            target,
+                            "stringLengthUtf8",
+                            StringLengthUtf8,
+                            &fast_string_length_utf8);
 
   target
       ->Set(context,
@@ -1900,6 +2032,10 @@ void RegisterExternalReferences(ExternalReferenceRegistry* registry) {
   registry->Register(fast_is_utf8);
   registry->Register(IsAscii);
   registry->Register(fast_is_ascii);
+  registry->Register(IsLatin1);
+  registry->Register(fast_is_latin1);
+  registry->Register(StringLengthUtf8);
+  registry->Register(fast_string_length_utf8);
 
   registry->Register(StringSlice<ASCII>);
   registry->Register(StringSlice<BASE64>);
@@ -1925,6 +2061,7 @@ void RegisterExternalReferences(ExternalReferenceRegistry* registry) {
 
   registry->Register(CopyArrayBuffer);
   registry->Register(CreateUnsafeArrayBuffer);
+  registry->Register(ArrayBufferAlignedOffset);
 
   registry->Register(Atob);
   registry->Register(Btoa);

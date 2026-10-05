@@ -1,4 +1,4 @@
-// Flags: --experimental-ffi --expose-gc
+// Flags: --expose-gc --allow-natives-syntax
 'use strict';
 const common = require('../common');
 common.skipIfFFIMissing();
@@ -67,6 +67,27 @@ test('dlopen resolves functions from definitions', () => {
   }
 });
 
+test('FFI functions are not constructible', () => {
+  const { lib, functions } = ffi.dlopen(libraryPath, {
+    add_i32: fixtureSymbols.add_i32,
+    multiply_f64: fixtureSymbols.multiply_f64,
+  });
+
+  try {
+    assert.strictEqual(Object.hasOwn(functions.add_i32, 'prototype'), false);
+    assert.strictEqual(
+      Object.hasOwn(functions.multiply_f64, 'prototype'), false);
+    assert.throws(
+      () => Reflect.construct(functions.add_i32, [20, 22]),
+      TypeError);
+    assert.throws(
+      () => Reflect.construct(functions.multiply_f64, [6, 7]),
+      TypeError);
+  } finally {
+    lib.close();
+  }
+});
+
 test('DynamicLibrary exposes functions and symbols', () => {
   const lib = new ffi.DynamicLibrary(libraryPath);
 
@@ -100,6 +121,24 @@ test('DynamicLibrary exposes functions and symbols', () => {
     assert.strictEqual(lib.functions.add_i64.pointer, functions.add_i64.pointer);
   } finally {
     ffi.dlclose(lib);
+  }
+});
+
+test('DynamicLibrary getters reject incompatible receivers', () => {
+  const lib = new ffi.DynamicLibrary(libraryPath);
+
+  try {
+    const invalidGets = [
+      () => Reflect.get(lib, 'path', {}),
+      () => Reflect.get(lib, 'symbols', {}),
+      () => Reflect.get(ffi.DynamicLibrary.prototype, 'functions', {}),
+    ];
+
+    for (const invalidGet of invalidGets) {
+      assert.throws(invalidGet, TypeError);
+    }
+  } finally {
+    lib.close();
   }
 });
 
@@ -176,6 +215,46 @@ test('getFunction caches signatures consistently', () => {
   }
 });
 
+test('resolving the same symbol reuses one function', () => {
+  const lib = new ffi.DynamicLibrary(libraryPath);
+  const definitions = { add_i32: fixtureSymbols.add_i32 };
+
+  try {
+    // Every resolution used to build a new callable, allocating another
+    // trampoline and making `lib.functions.add_i32` a different function on
+    // each read.
+    const fn = lib.getFunction('add_i32', fixtureSymbols.add_i32);
+    assert.strictEqual(lib.getFunction('add_i32', fixtureSymbols.add_i32), fn);
+    assert.strictEqual(lib.functions.add_i32, fn);
+    assert.strictEqual(lib.getFunctions().add_i32, fn);
+    assert.strictEqual(lib.getFunctions(definitions).add_i32, fn);
+    assert.strictEqual(fn(20, 22), 42);
+  } finally {
+    lib.close();
+  }
+});
+
+test('a dropped function wrapper is collectable', async () => {
+  const lib = new ffi.DynamicLibrary(libraryPath);
+
+  try {
+    // Caching the wrapper must not pin it, so that dropping the last user
+    // reference still releases the wrapper and the trampoline it owns.
+    let fn = lib.getFunction('add_i32', fixtureSymbols.add_i32);
+    const ref = new WeakRef(fn);
+    fn = null;
+
+    await gcUntil('a dropped function wrapper is collectable', () => {
+      return ref.deref() === undefined;
+    });
+
+    fn = lib.getFunction('add_i32', fixtureSymbols.add_i32);
+    assert.strictEqual(fn(20, 22), 42);
+  } finally {
+    lib.close();
+  }
+});
+
 test('FFI functions keep their owning library alive', async () => {
   let lib = new ffi.DynamicLibrary(libraryPath);
   const addI32 = lib.getFunction('add_i32', fixtureSymbols.add_i32);
@@ -207,6 +286,44 @@ test('closed libraries reject subsequent operations', () => {
   assert.throws(() => functions.add_i32(1, 2), /Library is closed/);
   assert.throws(() => lib.getFunction('add_i32', fixtureSymbols.add_i32), /Library is closed/);
   assert.throws(() => lib.getSymbol('add_i32'), /Library is closed/);
+  assert.throws(() => lib.getFunctions({ add_i32: fixtureSymbols.add_i32 }), /Library is closed/);
+  assert.throws(() => lib.getSymbols(), /Library is closed/);
+});
+
+test('closing the library from a signature getter of a cached function', () => {
+  const lib = new ffi.DynamicLibrary(libraryPath);
+  lib.getFunction('add_i32', fixtureSymbols.add_i32);
+
+  assert.throws(() => {
+    lib.getFunction('add_i32', {
+      arguments: ['i32', 'i32'],
+      get return() {
+        lib.close();
+        return 'i32';
+      },
+    });
+  }, { code: 'ERR_FFI_LIBRARY_CLOSED' });
+});
+
+test('optimized fast calls reject calls after the library is closed', () => {
+  const { lib, functions } = ffi.dlopen(libraryPath, {
+    multiply_f64: fixtureSymbols.multiply_f64,
+  });
+
+  function hot(a, b) {
+    return functions.multiply_f64(a, b);
+  }
+
+  eval('%PrepareFunctionForOptimization(hot)');
+  assert.strictEqual(hot(2, 3), 6);
+  eval('%OptimizeFunctionOnNextCall(hot)');
+  assert.strictEqual(hot(2, 3), 6);
+
+  lib.close();
+  assert.throws(() => hot(2, 3), {
+    code: 'ERR_FFI_LIBRARY_CLOSED',
+    message: 'Library is closed',
+  });
 });
 
 test('DynamicLibrary supports Symbol.dispose', () => {
@@ -329,6 +446,24 @@ test('dynamic library APIs validate failures and bad signatures', () => {
     assert.throws(() => {
       lib.getFunction('add_i32', { return: 'i32', arguments: ['i32\0bad'] });
     }, /Argument 0 of function add_i32 must not contain null bytes/);
+
+    assert.throws(() => {
+      lib.getFunction('add_i32', { return: 1, arguments: [] });
+    }, {
+      code: 'ERR_INVALID_ARG_TYPE',
+    });
+
+    assert.throws(() => {
+      lib.getFunction('add_i32', { return: 'i32', arguments: 'i32' });
+    }, {
+      code: 'ERR_INVALID_ARG_TYPE',
+    });
+
+    assert.throws(() => {
+      lib.getFunction('add_i32', { return: 'i32', arguments: [1] });
+    }, {
+      code: 'ERR_INVALID_ARG_TYPE',
+    });
 
     assert.throws(() => {
       lib.getFunctions('not an object');

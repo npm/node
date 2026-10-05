@@ -5,10 +5,10 @@ const { skipIfSQLiteMissing } = require('../common');
 skipIfSQLiteMissing();
 
 const assert = require('assert');
-const { DatabaseSync } = require('node:sqlite');
+const { Database } = require('node:sqlite');
 const { test, beforeEach } = require('node:test');
 
-const db = new DatabaseSync(':memory:');
+const db = new Database(':memory:');
 const sql = db.createTagStore(10);
 
 beforeEach(() => {
@@ -18,7 +18,7 @@ beforeEach(() => {
 });
 
 test('throws error if database is not open', () => {
-  const db = new DatabaseSync(':memory:', { open: false });
+  const db = new Database(':memory:', { open: false });
 
   assert.throws(() => {
     db.createTagStore(10);
@@ -90,6 +90,43 @@ test('queries with no results', () => {
   assert.strictEqual(count, 0);
 });
 
+test('rejects parameters outside of template expressions', () => {
+  const ldb = new Database(':memory:');
+  const lsql = ldb.createTagStore();
+  ldb.exec(`
+    CREATE TABLE secrets(owner TEXT, token TEXT);
+    INSERT INTO secrets VALUES ('victim', 'secret');
+    CREATE TABLE transfers(from_user TEXT, amount INTEGER);
+  `);
+
+  const expectedError = {
+    code: 'ERR_INVALID_ARG_VALUE',
+    message: /must be bound using template literal placeholders/,
+  };
+
+  for (const method of ['get', 'all', 'iterate']) {
+    // Prime the cached statement with a bound value before each attempt.
+    // eslint-disable-next-line no-unused-expressions
+    lsql.all`SELECT token FROM secrets WHERE owner = ${'victim'}`;
+    assert.throws(() => {
+      // eslint-disable-next-line no-unused-expressions
+      lsql[method]`SELECT token FROM secrets WHERE owner = ?`;
+    }, expectedError);
+  }
+
+  // eslint-disable-next-line no-unused-expressions
+  lsql.run`INSERT INTO transfers VALUES (${'victim'},${100})`;
+  assert.throws(() => {
+    // eslint-disable-next-line no-unused-expressions
+    lsql.run`INSERT INTO transfers VALUES (?,?)`;
+  }, expectedError);
+  assert.strictEqual(
+    ldb.prepare('SELECT COUNT(*) AS count FROM transfers').get().count,
+    1);
+
+  ldb.close();
+});
+
 test('TagStore capacity, size, and clear', () => {
   assert.strictEqual(sql.capacity, 10);
   assert.strictEqual(sql.size, 0);
@@ -113,7 +150,7 @@ test('TagStore capacity, size, and clear', () => {
 });
 
 test('iterator is invalidated when the cached statement is reset', () => {
-  const ldb = new DatabaseSync(':memory:');
+  const ldb = new Database(':memory:');
   const lsql = ldb.createTagStore();
   ldb.exec('CREATE TABLE foo (id INTEGER PRIMARY KEY, text TEXT)');
   for (let i = 0; i < 5; i++) {
@@ -167,7 +204,7 @@ test('iterator is invalidated when the cached statement is reset', () => {
 });
 
 test('a stale iterator cannot replay a victim-bound write', () => {
-  const bank = new DatabaseSync(':memory:');
+  const bank = new Database(':memory:');
   const tx = bank.createTagStore();
   bank.exec(`
     CREATE TABLE acct(user TEXT PRIMARY KEY, balance INTEGER);
@@ -220,7 +257,41 @@ test('a finished iterator stays done and does not restart', () => {
   assert.strictEqual(iter.next().done, true);
 });
 
-test('sql.db returns the associated DatabaseSync instance', () => {
+test('createTagStore throws on invalid maxSize', () => {
+  const db = new Database(':memory:');
+
+  assert.throws(() => db.createTagStore(0), {
+    code: 'ERR_OUT_OF_RANGE',
+    message: /maxSize/,
+  });
+
+  assert.throws(() => db.createTagStore(-1), {
+    code: 'ERR_OUT_OF_RANGE',
+    message: /maxSize/,
+  });
+
+  assert.throws(() => db.createTagStore(NaN), {
+    code: 'ERR_OUT_OF_RANGE',
+    message: /maxSize/,
+  });
+
+  assert.throws(() => db.createTagStore(1.5), {
+    code: 'ERR_OUT_OF_RANGE',
+    message: /maxSize/,
+  });
+
+  assert.throws(() => db.createTagStore('abc'), {
+    code: 'ERR_INVALID_ARG_TYPE',
+    message: /maxSize/,
+  });
+
+  assert.throws(() => db.createTagStore(Number.MAX_SAFE_INTEGER), {
+    code: 'ERR_OUT_OF_RANGE',
+    message: /maxSize/,
+  });
+});
+
+test('sql.db returns the associated Database instance', () => {
   assert.strictEqual(sql.db, db);
 });
 
@@ -246,8 +317,31 @@ test('sql error messages are descriptive', () => {
   });
 });
 
+test('rejects SQL that contains no statements', () => {
+  const expectedError = {
+    code: 'ERR_INVALID_ARG_VALUE',
+    message: /contains no statements/,
+  };
+
+  for (const method of ['run', 'get', 'all', 'iterate']) {
+    assert.throws(() => {
+      // eslint-disable-next-line no-unused-expressions
+      sql[method]`-- comment`;
+    }, expectedError);
+
+    assert.throws(() => {
+      // eslint-disable-next-line no-unused-expressions
+      sql[method]``;
+    }, expectedError);
+  }
+
+  // A rejected statement must not be cached, so a later valid query with the
+  // same tag store still works.
+  assert.strictEqual(sql.run`INSERT INTO foo (text) VALUES (${'bob'})`.changes, 1);
+});
+
 test('a tag store keeps the database alive by itself', () => {
-  const sql = new DatabaseSync(':memory:').createTagStore();
+  const sql = new Database(':memory:').createTagStore();
 
   sql.db.exec('CREATE TABLE test (data INTEGER)');
 
@@ -262,9 +356,9 @@ test('tag store prevents circular reference leaks', async () => {
 
   const before = process.memoryUsage().heapUsed;
 
-  // Create many SQLTagStore + DatabaseSync pairs with circular references
+  // Create many SQLTagStore + Database pairs with circular references
   for (let i = 0; i < 1000; i++) {
-    const sql = new DatabaseSync(':memory:').createTagStore();
+    const sql = new Database(':memory:').createTagStore();
     sql.db.exec('CREATE TABLE test (data INTEGER)');
     // eslint-disable-next-line no-void
     sql.db.setAuthorizer(() => void sql.db);
@@ -276,4 +370,21 @@ test('tag store prevents circular reference leaks', async () => {
     // Memory should not grow significantly (allow 50% margin for noise)
     return after < before * 1.5;
   }, 20);
+});
+
+test('cached statements are finalized when the database is closed', () => {
+  const db = new Database(':memory:');
+  const sql = db.createTagStore();
+
+  db.exec('CREATE TABLE foo (id INTEGER PRIMARY KEY)');
+  db.exec('INSERT INTO foo (id) VALUES (1)');
+  assert.deepStrictEqual(sql.all`SELECT id FROM foo`, [{ __proto__: null, id: 1 }]);
+
+  db.close();
+  db.open();
+
+  assert.throws(() => sql.all`SELECT id FROM foo`, {
+    code: 'ERR_SQLITE_ERROR',
+    message: /no such table/i,
+  });
 });

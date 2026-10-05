@@ -182,8 +182,6 @@ For information about the governance of the Node.js project, see
   **Ruy Adorno** <<ruy@vlt.sh>> (he/him)
 * [ShogunPanda](https://github.com/ShogunPanda) -
   **Paolo Insogna** <<paolo@cowtech.it>> (he/him)
-* [targos](https://github.com/targos) -
-  **Michaël Zasso** <<targos@protonmail.com>> (he/him)
 * [tniessen](https://github.com/tniessen) -
   **Tobias Nießen** <<tniessen@tnie.de>> (he/him)
 
@@ -260,6 +258,8 @@ For information about the governance of the Node.js project, see
   **Sam Roberts** <<vieuxtech@gmail.com>>
 * [shigeki](https://github.com/shigeki) -
   **Shigeki Ohtsu** <<ohtsu@ohtsu.org>> (he/him)
+* [targos](https://github.com/targos) -
+  **Michaël Zasso** <<targos@protonmail.com>> (he/him)
 * [thefourtheye](https://github.com/thefourtheye) -
   **Sakthipriyan Vairamani** <<thechargingvolcano@gmail.com>> (he/him)
 * [TimothyGu](https://github.com/TimothyGu) -
@@ -285,6 +285,8 @@ For information about the governance of the Node.js project, see
   **Antoine du Hamel** <<duhamelantoine1995@gmail.com>> (he/him) - [Support me](https://github.com/sponsors/aduh95)
 * [anonrig](https://github.com/anonrig) -
   **Yagiz Nizipli** <<yagiz@nizipli.com>> (he/him) - [Support me](https://github.com/sponsors/anonrig)
+* [araujogui](https://github.com/araujogui) -
+  **Guilherme Araújo** <<arauujogui@gmail.com>> (he/him)
 * [atlowChemi](https://github.com/atlowChemi) -
   **Chemi Atlow** <<chemi@atlow.co.il>> (he/him)
 * [avivkeller](https://github.com/avivkeller) -
@@ -323,8 +325,6 @@ For information about the governance of the Node.js project, see
   **Erick Wendel** <<erick.workspace@gmail.com>> (he/him)
 * [Ethan-Arrowood](https://github.com/Ethan-Arrowood) -
   **Ethan Arrowood** <<ethan@arrowood.dev>> (he/him)
-* [fhinkel](https://github.com/fhinkel) -
-  **Franziska Hinkelmann** <<franziska.hinkelmann@gmail.com>> (she/her)
 * [Flarna](https://github.com/Flarna) -
   **Gerhard Stöbich** <<deb2001-github@yahoo.de>> (he/they)
 * [gabrielschulhof](https://github.com/gabrielschulhof) -
@@ -431,8 +431,6 @@ For information about the governance of the Node.js project, see
   **Stefan Stojanovic** <<stefan.stojanovic@janeasystems.com>> (he/him)
 * [sxa](https://github.com/sxa) -
   **Stewart X Addison** <<sxa@redhat.com>> (he/him)
-* [targos](https://github.com/targos) -
-  **Michaël Zasso** <<targos@protonmail.com>> (he/him)
 * [theanarkh](https://github.com/theanarkh) -
   **theanarkh** <<theratliter@gmail.com>> (he/him)
 * [tniessen](https://github.com/tniessen) -
@@ -447,6 +445,8 @@ For information about the governance of the Node.js project, see
   **Vladimir Morozov** <<vmorozov@microsoft.com>> (he/him)
 * [watilde](https://github.com/watilde) -
   **Daijiro Wachi** <<daijiro.wachi@gmail.com>> (he/him)
+* [XadillaX](https://github.com/XadillaX) -
+  **Khaidi Chu** <<i@2333.moe>> (he/him)
 * [ZYSzys](https://github.com/ZYSzys) -
   **Yongsheng Zhang** <<zyszys98@gmail.com>> (he/him)
 
@@ -525,6 +525,8 @@ For information about the governance of the Node.js project, see
   **Evan Lucas** <<evanlucas@me.com>> (he/him)
 * [F3n67u](https://github.com/F3n67u) -
   **Feng Yu** <<F3n67u@outlook.com>> (he/him)
+* [fhinkel](https://github.com/fhinkel) -
+  **Franziska Hinkelmann** <<franziska.hinkelmann@gmail.com>> (she/her)
 * [firedfox](https://github.com/firedfox) -
   **Daniel Wang** <<wangyang0123@gmail.com>>
 * [Fishrock123](https://github.com/Fishrock123) -
@@ -699,6 +701,8 @@ For information about the governance of the Node.js project, see
   **Weijia Wang** <<starkwang@126.com>>
 * [stefanmb](https://github.com/stefanmb) -
   **Stefan Budeanu** <<stefan@budeanu.com>>
+* [targos](https://github.com/targos) -
+  **Michaël Zasso** <<targos@protonmail.com>> (he/him)
 * [tellnes](https://github.com/tellnes) -
   **Christian Tellnes** <<christian@tellnes.no>>
 * [thefourtheye](https://github.com/thefourtheye) -
@@ -723,8 +727,6 @@ For information about the governance of the Node.js project, see
   **Thomas Watson** <<w@tson.dk>>
 * [whitlockjc](https://github.com/whitlockjc) -
   **Jeremy Whitlock** <<jwhitlock@apache.org>>
-* [XadillaX](https://github.com/XadillaX) -
-  **Khaidi Chu** <<i@2333.moe>> (he/him)
 * [yashLadha](https://github.com/yashLadha) -
   **Yash Ladha** <<yash@yashladha.in>> (he/him)
 * [yhwang](https://github.com/yhwang) -
@@ -761,6 +763,8 @@ maintaining the Node.js project.
   **Wiyeong Seo** <<hbsps.dev@gmail.com>>
 * [iam-frankqiu](https://github.com/iam-frankqiu) -
   **Frank Qiu** <<iam.frankqiu@gmail.com>> (he/him)
+* [inoway46](https://github.com/inoway46) -
+  **Yuya Inoue** <<inoueyuya416@gmail.com>> (he/him)
 * [milesguicent](https://github.com/milesguicent) -
   **Miles Guicent** <<guicent@pm.me>> (he/him)
 * [preveen-stack](https://github.com/preveen-stack) -
@@ -779,8 +783,6 @@ Primary GPG keys for Node.js Releasers (some Releasers sign with subkeys):
   `DD792F5973C6DE52C432CBDAC77ABFA00DDBF2B7`
 * **Marco Ippolito** <<marcoippolito54@gmail.com>>
   `CC68F5A3106FF448322E48ED27F5E38D5B0A215F`
-* **Michaël Zasso** <<targos@protonmail.com>>
-  `8FCCA13FEF1D0C2E91008E09770F7A9A5AE15600`
 * **Rafael Gonzaga** <<rafael.nunu@hotmail.com>>
   `890C08DB8579162FEE0DF9DB8BEAB4DFCF555EF4`
 * **Richard Lau** <<richard.lau@ibm.com>>
@@ -802,7 +804,6 @@ that server.
 gpg --keyserver hkps://keys.openpgp.org --recv-keys 5BE8A3F6C8A5C01D106C0AD820B1A390B168D356 # Antoine du Hamel
 gpg --keyserver hkps://keys.openpgp.org --recv-keys DD792F5973C6DE52C432CBDAC77ABFA00DDBF2B7 # Juan José Arboleda
 gpg --keyserver hkps://keys.openpgp.org --recv-keys CC68F5A3106FF448322E48ED27F5E38D5B0A215F # Marco Ippolito
-gpg --keyserver hkps://keys.openpgp.org --recv-keys 8FCCA13FEF1D0C2E91008E09770F7A9A5AE15600 # Michaël Zasso
 gpg --keyserver hkps://keys.openpgp.org --recv-keys 890C08DB8579162FEE0DF9DB8BEAB4DFCF555EF4 # Rafael Gonzaga
 gpg --keyserver hkps://keys.openpgp.org --recv-keys C82FA3AE1CBEDC6BE46B9360C43CEC45C17AB93C # Richard Lau
 gpg --keyserver hkps://keys.openpgp.org --recv-keys 108F52B48DB57BB0CC439B2997B01419BD92F80A # Ruy Adorno
@@ -846,6 +847,8 @@ verify a downloaded file.
   `61FC681DFB92A079F1685E77973F295594EC4689`
 * **Julien Gilli** <<jgilli@fastmail.fm>>
   `114F43EE0176B71C7BC219DD50A3051F888C628D`
+* **Michaël Zasso** <<targos@protonmail.com>>
+  `8FCCA13FEF1D0C2E91008E09770F7A9A5AE15600`
 * **Myles Borins** <<myles.borins@gmail.com>>
   `C4F0DFFF4E8C1A8236409D08E73BC641CC11F4C8`
 * **Rod Vagg** <<rod@vagg.org>>

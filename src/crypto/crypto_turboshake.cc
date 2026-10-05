@@ -428,6 +428,11 @@ Maybe<void> TurboShakeTraits::AdditionalConfig(
     TurboShakeConfig* params) {
   Environment* env = Environment::GetCurrent(args);
 
+  if (IsFipsEnabled()) {
+    THROW_ERR_CRYPTO_UNSUPPORTED_OPERATION(env);
+    return Nothing<void>();
+  }
+
   // args[offset + 0] = algorithm name (string)
   CHECK(args[offset]->IsString());
   Utf8Value algorithm_name(env->isolate(), args[offset]);
@@ -469,7 +474,11 @@ bool TurboShakeTraits::DeriveBits(Environment* env,
                                   CryptoJobMode mode,
                                   CryptoErrorStore* errors) {
   CHECK_GT(params.output_length, 0);
-  char* buf = MallocOpenSSL<char>(params.output_length);
+  char* buf = static_cast<char*>(OPENSSL_malloc(params.output_length));
+  if (buf == nullptr) {
+    errors->Insert(NodeCryptoError::ALLOCATION_FAILED);
+    return false;
+  }
 
   const uint8_t* input = reinterpret_cast<const uint8_t*>(params.data.data());
   size_t input_len = params.data.size();
@@ -530,6 +539,11 @@ Maybe<void> KangarooTwelveTraits::AdditionalConfig(
     unsigned int offset,
     KangarooTwelveConfig* params) {
   Environment* env = Environment::GetCurrent(args);
+
+  if (IsFipsEnabled()) {
+    THROW_ERR_CRYPTO_UNSUPPORTED_OPERATION(env);
+    return Nothing<void>();
+  }
 
   // args[offset + 0] = algorithm name (string)
   CHECK(args[offset]->IsString());
@@ -595,7 +609,11 @@ bool KangarooTwelveTraits::DeriveBits(Environment* env,
     return false;
   }
 
-  char* buf = MallocOpenSSL<char>(params.output_length);
+  char* buf = static_cast<char*>(OPENSSL_malloc(params.output_length));
+  if (buf == nullptr) {
+    errors->Insert(NodeCryptoError::ALLOCATION_FAILED);
+    return false;
+  }
 
   switch (params.variant) {
     case KangarooTwelveVariant::KT128:

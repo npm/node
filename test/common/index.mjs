@@ -24,6 +24,7 @@ const {
   hasLocalStorage,
   hasIntl,
   hasTemporal,
+  hasV8Sandbox,
   hasIPv6,
   isAIX,
   isAlive,
@@ -53,6 +54,7 @@ const {
   skipIfEslintMissing,
   skipIfInspectorDisabled,
   skipIfSQLiteMissing,
+  skipIfPerfettoEnabled,
   spawnPromisified,
   sleepSync,
 } = common;
@@ -82,6 +84,7 @@ export {
   hasLocalStorage,
   hasIntl,
   hasTemporal,
+  hasV8Sandbox,
   hasIPv6,
   isAIX,
   isAlive,
@@ -111,6 +114,7 @@ export {
   skipIfEslintMissing,
   skipIfInspectorDisabled,
   skipIfSQLiteMissing,
+  skipIfPerfettoEnabled,
   spawnPromisified,
   sleepSync,
 };

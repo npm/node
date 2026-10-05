@@ -5,10 +5,12 @@ const common = require('../common');
 if (!common.hasCrypto)
   common.skip('missing crypto');
 
-const { hasOpenSSL } = require('../common/crypto');
+const { hasFIPS, hasOpenSSL } = require('../common/crypto');
 
 if (!hasOpenSSL(3, 2))
   common.skip('requires OpenSSL >= 3.2');
+if (hasFIPS(3))
+  common.skip('Argon2 is not available in FIPS mode');
 
 const assert = require('assert');
 const { createSecretKey } = require('crypto');
@@ -78,7 +80,7 @@ for (const { algorithm, length, password, params, tag } of vectors) {
       const result = await subtle.deriveBits(parameters, key, length);
       assert.deepStrictEqual(result, tag);
     }
-    {
+    if (algorithm === 'Argon2id') {
       const derivedKeyType = { name: 'HMAC', length, hash: 'SHA-256' };
 
       const key = createSecretKey(password)
